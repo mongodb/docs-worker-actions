@@ -4,6 +4,9 @@ import github from '@actions/github';
 
 // https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret
 export async function run() {
+  const prNumber = github.context.payload.pull_request?.number;
+
+  core.info(`PR number, I think? ${prNumber}`);
   const githubToken = process.env.GITHUB_SECRET;
 
   if (!githubToken) {
@@ -11,10 +14,6 @@ export async function run() {
 
     return;
   }
-
-  const prNumber = github.context.payload.pull_request?.number;
-
-  core.info(`PR number, I think? ${prNumber}`);
 
   return;
   try {
