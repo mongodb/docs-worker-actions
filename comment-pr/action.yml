@@ -1,19 +1,6 @@
 name: 'docs-worker-actions'
-description: 'Provide a description here'
-author: 'Your name or organization here'
-
-# Define your inputs here.
-inputs:
-  milliseconds:
-    description: 'Your input description here'
-    required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
-
+description: 'Parse output from AWS CDK deployment to display API Gateway endpoint'
+author: 'MongoDB'
 runs:
   using: node20
   main: ../dist/comment-pr/index.js
