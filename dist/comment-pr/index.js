@@ -9643,10 +9643,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const core_1 = __importDefault(__nccwpck_require__(2186));
-const github_1 = __importDefault(__nccwpck_require__(5438));
+const github_1 = __nccwpck_require__(5438);
 // https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret
 async function run() {
-    const prNumber = github_1.default.context.payload.pull_request?.number;
+    const prNumber = github_1.context.payload.pull_request?.number;
     core_1.default.info(`PR number, I think? ${prNumber}`);
     const githubToken = process.env.GITHUB_SECRET;
     if (!githubToken) {
