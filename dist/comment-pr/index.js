@@ -9669,13 +9669,13 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 // https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret
 async function run() {
-    const prNumber = github.context.payload.pull_request?.number;
-    core.info(`PR number, I think? ${prNumber}`);
-    const githubToken = process.env.GITHUB_SECRET;
+    const githubToken = process.env.GITHUB_TOKEN;
     if (!githubToken) {
         core.error('ERROR! GITHUB_SECRET is not set as an environment variable.');
-        return;
+        throw new Error('Failed. GITHUB_SECRET is not set.');
     }
+    const prNumber = github.context.payload.pull_request?.number;
+    core.info(`PR number, I think? ${prNumber}`);
     return;
     try {
         const outputsFile = fs_1.default.readFileSync('cdk-infra/outputs.json').toString();
