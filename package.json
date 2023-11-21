@@ -18,7 +18,8 @@
     "setup"
   ],
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./comment-pr": "./dist/comment-pr/index.js"
   },
   "engines": {
     "node": ">=20"
