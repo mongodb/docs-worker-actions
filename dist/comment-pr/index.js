@@ -9682,9 +9682,8 @@ async function run() {
     try {
         const outputsFile = fs_1.default.readFileSync('cdk-infra/outputs.json').toString();
         const outputs = JSON.parse(outputsFile);
-        console.log('env', Object.keys(process.env));
-        console.log(process.env.GIT_BRANCH);
-        const webhook = Object.values(outputs[`auto-builder-stack-enhancedApp-stg-${process.env.GIT_BRANCH}-webhooks`])[0];
+        console.log(process.env.GITHUB_HEAD_REF);
+        const webhook = Object.values(outputs[`auto-builder-stack-enhancedApp-stg-${process.env.GITHUB_HEAD_REF}-webhooks`])[0];
         console.log(webhook);
         await octokit.rest.issues.createComment({
             issue_number: prNumber,

@@ -23,11 +23,10 @@ export async function run() {
     const outputsFile = fs.readFileSync('cdk-infra/outputs.json').toString();
     const outputs = JSON.parse(outputsFile);
 
-    console.log('env', Object.keys(process.env));
-    console.log(process.env.GIT_BRANCH);
+    console.log(process.env.GITHUB_HEAD_REF);
     const webhook = Object.values(
       outputs[
-        `auto-builder-stack-enhancedApp-stg-${process.env.GIT_BRANCH}-webhooks`
+        `auto-builder-stack-enhancedApp-stg-${process.env.GITHUB_HEAD_REF}-webhooks`
       ]
     )[0];
 
