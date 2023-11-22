@@ -9684,10 +9684,9 @@ async function run() {
         const outputs = JSON.parse(outputsFile);
         console.log(process.env.GITHUB_HEAD_REF);
         const webhook = Object.values(outputs[`auto-builder-stack-enhancedApp-stg-${process.env.GITHUB_HEAD_REF}-webhooks`])[0];
-        console.log(webhook);
         await octokit.rest.issues.createComment({
             issue_number: prNumber,
-            body: `Your feature branch infrastructure has been deployed! \n your webhook URL is: ${webhook}`,
+            body: `Your feature branch infrastructure has been deployed! \n your webhook URL is: ${webhook}webhook/githubEndpoint/trigger/build\n for more information on how to use this endpoint, follow these [instructions](https://wiki.corp.mongodb.com/x/7FzoDg)`,
             owner: github.context.repo.owner,
             repo: github.context.repo.repo
         });

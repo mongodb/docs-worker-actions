@@ -32,7 +32,7 @@ export async function run() {
 
     await octokit.rest.issues.createComment({
       issue_number: prNumber,
-      body: `Your feature branch infrastructure has been deployed! \n your webhook URL is: ${webhook}webhook/githubEndpoint/trigger/build`,
+      body: `Your feature branch infrastructure has been deployed! \n your webhook URL is: ${webhook}webhook/githubEndpoint/trigger/build\n for more information on how to use this endpoint, follow these [instructions](https://wiki.corp.mongodb.com/x/7FzoDg)`,
       owner: github.context.repo.owner,
       repo: github.context.repo.repo
     });
