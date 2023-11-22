@@ -12,11 +12,14 @@ export async function run() {
     throw new Error('Failed. GITHUB_SECRET is not set.');
   }
 
+  const octokit = github.getOctokit(githubToken);
+
   const prNumber = github.context.payload.pull_request?.number;
 
-  core.info(`PR number, I think? ${prNumber}`);
-
-  return;
+  if (!prNumber) {
+    core.error('ERROR! PR number is undefined');
+    throw new Error('Could not retrieve PR number');
+  }
   try {
     const outputsFile = fs.readFileSync('cdk-infra/outputs.json').toString();
     const outputs = JSON.parse(outputsFile);
@@ -26,10 +29,16 @@ export async function run() {
         `auto-builder-stack-enhancedApp-stg-${process.env.GIT_BRANCH}-webhooks`
       ]
     )[0];
-    return webhook;
+
+    await octokit.rest.issues.createComment({
+      issue_number: prNumber,
+      body: `Your feature branch infrastructure has been deployed! \n your webhook URL is: ${webhook}`,
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo
+    });
   } catch (error) {
     console.log('Error occurred when retrieving Webhook URL', error);
-    return '';
+    throw error;
   }
 }
 
