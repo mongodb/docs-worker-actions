@@ -7414,7 +7414,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports["default"] = void 0;
 
-var _v = _interopRequireDefault(__nccwpck_require__(5998));
+var _v = _interopRequireDefault(__nccwpck_require__(5198));
 
 var _md = _interopRequireDefault(__nccwpck_require__(4569));
 
@@ -7426,7 +7426,7 @@ exports["default"] = _default;
 
 /***/ }),
 
-/***/ 5998:
+/***/ 5198:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -7566,7 +7566,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports["default"] = void 0;
 
-var _v = _interopRequireDefault(__nccwpck_require__(5998));
+var _v = _interopRequireDefault(__nccwpck_require__(5198));
 
 var _sha = _interopRequireDefault(__nccwpck_require__(5274));
 
@@ -9631,7 +9631,7 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 6840:
+/***/ 5998:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -9696,7 +9696,6 @@ async function run() {
     }
 }
 exports.run = run;
-run();
 
 
 /***/ }),
@@ -9875,12 +9874,18 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(6840);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const run_1 = __nccwpck_require__(5998);
+(0, run_1.run)();
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;
