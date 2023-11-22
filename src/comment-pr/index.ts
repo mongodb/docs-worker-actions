@@ -2,14 +2,13 @@ import fs from 'fs';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 
-// https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret
 export async function run() {
   const githubToken = process.env.GITHUB_TOKEN;
 
   if (!githubToken) {
-    core.error('ERROR! GITHUB_SECRET is not set as an environment variable.');
+    core.error('ERROR! GITHUB_TOKEN is not set as an environment variable.');
 
-    throw new Error('Failed. GITHUB_SECRET is not set.');
+    throw new Error('Failed. GITHUB_TOKEN is not set.');
   }
 
   const octokit = github.getOctokit(githubToken);
@@ -23,7 +22,8 @@ export async function run() {
   try {
     const outputsFile = fs.readFileSync('cdk-infra/outputs.json').toString();
     const outputs = JSON.parse(outputsFile);
-
+    console.log('outputs', outputs);
+    console.log('context', github.context);
     const webhook = Object.values(
       outputs[
         `auto-builder-stack-enhancedApp-stg-${process.env.GIT_BRANCH}-webhooks`

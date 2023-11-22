@@ -9667,12 +9667,11 @@ exports.run = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
-// https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret
 async function run() {
     const githubToken = process.env.GITHUB_TOKEN;
     if (!githubToken) {
-        core.error('ERROR! GITHUB_SECRET is not set as an environment variable.');
-        throw new Error('Failed. GITHUB_SECRET is not set.');
+        core.error('ERROR! GITHUB_TOKEN is not set as an environment variable.');
+        throw new Error('Failed. GITHUB_TOKEN is not set.');
     }
     const octokit = github.getOctokit(githubToken);
     const prNumber = github.context.payload.pull_request?.number;
@@ -9683,6 +9682,8 @@ async function run() {
     try {
         const outputsFile = fs_1.default.readFileSync('cdk-infra/outputs.json').toString();
         const outputs = JSON.parse(outputsFile);
+        console.log('outputs', outputs);
+        console.log('context', github.context);
         const webhook = Object.values(outputs[`auto-builder-stack-enhancedApp-stg-${process.env.GIT_BRANCH}-webhooks`])[0];
         await octokit.rest.issues.createComment({
             issue_number: prNumber,
