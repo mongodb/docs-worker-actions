@@ -9682,8 +9682,7 @@ async function run() {
     try {
         const outputsFile = fs_1.default.readFileSync('cdk-infra/outputs.json').toString();
         const outputs = JSON.parse(outputsFile);
-        console.log('outputs', outputs);
-        console.log('context', github.context);
+        console.log('env', Object.keys(process.env));
         console.log(process.env.GIT_BRANCH);
         const webhook = Object.values(outputs[`auto-builder-stack-enhancedApp-stg-${process.env.GIT_BRANCH}-webhooks`])[0];
         console.log(webhook);

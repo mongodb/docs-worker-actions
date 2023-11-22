@@ -22,8 +22,8 @@ export async function run() {
   try {
     const outputsFile = fs.readFileSync('cdk-infra/outputs.json').toString();
     const outputs = JSON.parse(outputsFile);
-    console.log('outputs', outputs);
-    console.log('context', github.context);
+
+    console.log('env', Object.keys(process.env));
     console.log(process.env.GIT_BRANCH);
     const webhook = Object.values(
       outputs[
