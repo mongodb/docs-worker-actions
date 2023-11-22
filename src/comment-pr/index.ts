@@ -24,11 +24,14 @@ export async function run() {
     const outputs = JSON.parse(outputsFile);
     console.log('outputs', outputs);
     console.log('context', github.context);
+    console.log(process.env.GIT_BRANCH);
     const webhook = Object.values(
       outputs[
         `auto-builder-stack-enhancedApp-stg-${process.env.GIT_BRANCH}-webhooks`
       ]
     )[0];
+
+    console.log(webhook);
 
     await octokit.rest.issues.createComment({
       issue_number: prNumber,
