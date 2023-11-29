@@ -18,7 +18,8 @@
     "setup"
   ],
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./comment-pr": "./dist/comment-pr/index.js"
   },
   "engines": {
     "node": ">=20"
@@ -30,7 +31,7 @@
     "format:check": "prettier --check **/*.ts",
     "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
     "package:module": "ncc build",
-    "package": "ncc build src/index.ts --license licenses.txt",
+    "package": "ncc build src/comment-pr/index.ts --license licenses.txt -o dist/comment-pr",
     "package:watch": "npm run package -- --watch",
     "test": "(jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
     "all": "npm run format:write && npm run lint && npm run test && npm run package"
