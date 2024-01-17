@@ -1,6 +1,9 @@
 import fs from 'fs';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import { promisify } from 'util';
+
+const readFileAsync = promisify(fs.readFile);
 
 export async function run(): Promise<void> {
   const githubToken = process.env.GITHUB_TOKEN;
@@ -20,7 +23,9 @@ export async function run(): Promise<void> {
     throw new Error('Could not retrieve PR number');
   }
   try {
-    const outputsFile = fs.readFileSync('cdk-infra/outputs.json').toString();
+    const outputsFile = (
+      await readFileAsync('cdk-infra/outputs.json')
+    ).toString();
     const outputs = JSON.parse(outputsFile);
 
     const webhook = Object.values(
