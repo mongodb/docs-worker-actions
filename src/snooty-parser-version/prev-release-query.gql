@@ -1,0 +1,18 @@
+query lastRelease($currentRelease: String!) {
+  repository(owner: "mongodb", name: "docs-worker-pool") {
+    releases(first: 1, after: $currentRelease) {
+      pageInfo {
+        startCursor
+        endCursor
+      }
+
+      nodes {
+        updatedAt
+        tag {
+          name
+          id
+        }
+      }
+    }
+  }
+}
