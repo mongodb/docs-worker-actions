@@ -23,6 +23,32 @@ function getParserVersion(dockerfileStr: string) {
   return currentVersion.trim();
 }
 
+interface GetReleaseQueryResponse {
+  data: {
+    repository: {
+      releases: {
+        nodes: Array<{
+          tag: {
+            target: {
+              oid: string;
+            };
+          };
+        }>;
+      };
+    };
+  };
+}
+
+interface GetDockerfileQueryResponse {
+  data: {
+    repository: {
+      dockerfile: {
+        text: string;
+      };
+    };
+  };
+}
+
 async function getLastReleaseDockerfile() {
   const githubToken = process.env.GITHUB_TOKEN;
 
@@ -32,21 +58,49 @@ async function getLastReleaseDockerfile() {
     throw new Error('Failed. GITHUB_TOKEN is not set.');
   }
 
-  const gqlQuery = (await readFileAsync('prev-release-query.gql')).toString();
+  const [prevReleaseQuery, getDockerfileQuery] = await Promise.all([
+    readFileAsync('prev-release-query.gql').then(result => result.toString()),
+    readFileAsync('get-dockerfile-by-commit-hash.gql').then(result =>
+      result.toString()
+    )
+  ]);
 
   const { graphql } = github.getOctokit(githubToken);
 
-  graphql(gqlQuery, {
-    // TODO: Add git hash of current release
-  });
+  const gqlResponse = await graphql<GetReleaseQueryResponse>(prevReleaseQuery);
+
+  // flattening it to make it more readable
+  const releases = gqlResponse.data.repository.releases.nodes.map(
+    node => node.tag.target.oid
+  );
+
+  const previousReleaseHash = releases.filter(
+    commitHash => commitHash !== github.context.sha
+  )[0];
+
+  const getDockerfileResponse = await graphql<GetDockerfileQueryResponse>(
+    getDockerfileQuery,
+    {
+      hashWithFilename: `${previousReleaseHash}:Dockerfile.enhanced`
+    }
+  );
+
+  return getDockerfileResponse.data.repository.dockerfile.text;
 }
 
 async function main() {
-  const dockerfileEnhanced = (
-    await readFileAsync('Dockerfile.enhanced')
-  ).toString();
+  const [dockerfileEnhanced, previousDockerfileEnhanced] = await Promise.all([
+    readFileAsync('Dockerfile.enhanced').then(result => result.toString()),
+    getLastReleaseDockerfile()
+  ]);
 
   const currentParserVersion = getParserVersion(dockerfileEnhanced);
+  const previousParserVersion = getParserVersion(previousDockerfileEnhanced);
+
+  core.setOutput(
+    'shouldRebuildCaches',
+    `${currentParserVersion !== previousParserVersion}`
+  );
 }
 
 main();
