@@ -1,15 +1,8 @@
-query lastRelease($currentRelease: String!) {
+query getLastTwoReleaseHashes {
   repository(owner: "mongodb", name: "docs-worker-pool") {
-    releases(first: 1, after: $currentRelease) {
-      pageInfo {
-        startCursor
-        endCursor
-      }
-
+    releases(first: 2, after: null)  {
       nodes {
-        updatedAt
         tag {
-          name
           id
         }
       }
