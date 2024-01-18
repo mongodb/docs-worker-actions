@@ -68,13 +68,16 @@ async function getLastReleaseDockerfile(): Promise<string> {
   const { graphql } = github.getOctokit(githubToken);
 
   const gqlResponse = await graphql<GetReleaseQueryResponse>(prevReleaseQuery);
+
   // flattening it to make it more readable
-  const releases = gqlResponse.repository.releases.nodes.map(
+  const releaseGitHashes = gqlResponse.repository.releases.nodes.map(
     node => node.tag.target.oid,
   );
 
-  const previousReleaseHash = releases.filter(
-    commitHash => commitHash !== github.context.sha,
+  const previousReleaseHash = releaseGitHashes.filter(
+    // UNCOMMENT THIS OUT! Removing for testing purposes temporarily
+    // commitHash => commitHash !== github.context.sha,
+    commitHash => commitHash !== '4421b1a5cc92646259b76694d1147ac22b98a969',
   )[0];
 
   const getDockerfileResponse = await graphql<GetDockerfileQueryResponse>(
@@ -96,7 +99,9 @@ async function main(): Promise<void> {
   const currentParserVersion = getParserVersion(dockerfileEnhanced);
   const previousParserVersion = getParserVersion(previousDockerfileEnhanced);
 
-  console.log(currentParserVersion, previousParserVersion);
+  // keeping this logging here to verify we are parsing the correct versions.
+  console.log(`CURRENT RELEASE PARSER VERSION: ${currentParserVersion}`);
+  console.log(`PREVIOUS RELEASE PARSER VERSION: ${previousParserVersion}`);
 
   core.setOutput(
     'shouldRebuildCaches',
