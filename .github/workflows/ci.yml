@@ -47,7 +47,8 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
-
+      - name: Download Dockerfile.enhanced
+        run: curl -O https://github.com/mongodb/docs-worker-pool/blob/v1.4.0/Dockerfile.enhanced
       - name: Test Snooty Parser Version Action
         id: test-snooty-parser-version
         uses: ./snooty-parser-version
