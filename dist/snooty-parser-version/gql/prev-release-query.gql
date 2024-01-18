@@ -1,5 +1,8 @@
 query getLastTwoReleases {
   repository(owner: "mongodb", name: "docs-worker-pool") {
+    # For whatever reason, using `before` and providing the git commit SHA for the current release
+    # still includes that commit and one commit before, not the two commits before it. I also tried
+    # Doing `first: 1`, but then you only get the commit SHA provided in `before`
     releases(first: 2, before: null) {
       nodes {
         tag {
