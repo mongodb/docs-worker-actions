@@ -9667,6 +9667,8 @@ exports.run = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
+const util_1 = __nccwpck_require__(3837);
+const readFileAsync = (0, util_1.promisify)(fs_1.default.readFile);
 async function run() {
     const githubToken = process.env.GITHUB_TOKEN;
     if (!githubToken) {
@@ -9680,7 +9682,7 @@ async function run() {
         throw new Error('Could not retrieve PR number');
     }
     try {
-        const outputsFile = fs_1.default.readFileSync('cdk-infra/outputs.json').toString();
+        const outputsFile = (await readFileAsync('cdk-infra/outputs.json')).toString();
         const outputs = JSON.parse(outputsFile);
         const webhook = Object.values(outputs[`auto-builder-stack-enhancedApp-stg-${process.env.GITHUB_HEAD_REF}-webhooks`])[0];
         await octokit.rest.issues.createComment({
