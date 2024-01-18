@@ -29,7 +29,7 @@
     "ci-test": "jest",
     "format:write": "prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
-    "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
+    "lint": "npx eslint . -c ./.eslintrc.yml",
     "package:module": "ncc build",
     "package:comment-pr": "ncc build src/comment-pr/index.ts --license licenses.txt -o dist/comment-pr",
     "package:snooty-parser-version": "ncc build src/snooty-parser-version/index.ts --license licenses.txt -o dist/snooty-parser-version",

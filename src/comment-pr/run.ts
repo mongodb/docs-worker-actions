@@ -31,14 +31,14 @@ export async function run(): Promise<void> {
     const webhook = Object.values(
       outputs[
         `auto-builder-stack-enhancedApp-stg-${process.env.GITHUB_HEAD_REF}-webhooks`
-      ]
+      ],
     )[0];
 
     await octokit.rest.issues.createComment({
       issue_number: prNumber,
       body: `Your feature branch infrastructure has been deployed! \n\n Your webhook URL is: ${webhook}webhook/githubEndpoint/trigger/build\n\n For more information on how to use this endpoint, follow these [instructions](https://wiki.corp.mongodb.com/x/7FzoDg).`,
       owner: github.context.repo.owner,
-      repo: github.context.repo.repo
+      repo: github.context.repo.repo,
     });
   } catch (error) {
     console.log('Error occurred when retrieving Webhook URL', error);
