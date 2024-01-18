@@ -3,7 +3,7 @@ query getLastTwoReleaseHashes {
     releases(first: 2, after: null)  {
       nodes {
         tag {
-          id
+          oid
         }
       }
     }
