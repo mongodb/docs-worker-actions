@@ -32,7 +32,7 @@
     "lint": "npx eslint . -c ./.eslintrc.yml",
     "package:module": "ncc build",
     "package:comment-pr": "ncc build src/comment-pr/index.ts --license licenses.txt -o dist/comment-pr",
-    "package:snooty-parser-version": "ncc build src/snooty-parser-version/index.ts --license licenses.txt -o dist/snooty-parser-version",
+    "package:snooty-parser-version": "ncc build src/snooty-parser-version/index.ts --license licenses.txt -o dist/snooty-parser-version && cp -R ./src/snooty-parser-version/gql/ ./dist/snooty-parser-version/gql",
     "package": "npm run package:comment-pr && npm run package:snooty-parser-version",
     "package:watch": "npm run package -- --watch",
     "test": "(jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
