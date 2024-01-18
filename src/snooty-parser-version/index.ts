@@ -25,27 +25,23 @@ function getParserVersion(dockerfileStr: string): string {
 }
 
 interface GetReleaseQueryResponse {
-  data: {
-    repository: {
-      releases: {
-        nodes: Array<{
-          tag: {
-            target: {
-              oid: string;
-            };
+  repository: {
+    releases: {
+      nodes: Array<{
+        tag: {
+          target: {
+            oid: string;
           };
-        }>;
-      };
+        };
+      }>;
     };
   };
 }
 
 interface GetDockerfileQueryResponse {
-  data: {
-    repository: {
-      dockerfile: {
-        text: string;
-      };
+  repository: {
+    dockerfile: {
+      text: string;
     };
   };
 }
@@ -74,7 +70,7 @@ async function getLastReleaseDockerfile(): Promise<string> {
   const gqlResponse = await graphql<GetReleaseQueryResponse>(prevReleaseQuery);
   console.log(gqlResponse);
   // flattening it to make it more readable
-  const releases = gqlResponse.data.repository.releases.nodes.map(
+  const releases = gqlResponse.repository.releases.nodes.map(
     node => node.tag.target.oid,
   );
 
@@ -89,7 +85,7 @@ async function getLastReleaseDockerfile(): Promise<string> {
     },
   );
 
-  return getDockerfileResponse.data.repository.dockerfile.text;
+  return getDockerfileResponse.repository.dockerfile.text;
 }
 
 async function main(): Promise<void> {
