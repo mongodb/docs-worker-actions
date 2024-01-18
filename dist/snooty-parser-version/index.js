@@ -9696,12 +9696,12 @@ async function getLastReleaseDockerfile() {
     const gqlResponse = await graphql(prevReleaseQuery);
     console.log(gqlResponse);
     // flattening it to make it more readable
-    const releases = gqlResponse.data.repository.releases.nodes.map(node => node.tag.target.oid);
+    const releases = gqlResponse.repository.releases.nodes.map(node => node.tag.target.oid);
     const previousReleaseHash = releases.filter(commitHash => commitHash !== github.context.sha)[0];
     const getDockerfileResponse = await graphql(getDockerfileQuery, {
         hashWithFilename: `${previousReleaseHash}:Dockerfile.enhanced`,
     });
-    return getDockerfileResponse.data.repository.dockerfile.text;
+    return getDockerfileResponse.repository.dockerfile.text;
 }
 async function main() {
     const [dockerfileEnhanced, previousDockerfileEnhanced] = await Promise.all([
