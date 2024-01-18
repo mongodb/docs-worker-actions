@@ -68,7 +68,7 @@ async function getLastReleaseDockerfile(): Promise<string> {
   const { graphql } = github.getOctokit(githubToken);
 
   const gqlResponse = await graphql<GetReleaseQueryResponse>(prevReleaseQuery);
-  console.log(gqlResponse);
+  console.log(JSON.stringify(gqlResponse, null, 4));
   // flattening it to make it more readable
   const releases = gqlResponse.repository.releases.nodes.map(
     node => node.tag.target.oid,
