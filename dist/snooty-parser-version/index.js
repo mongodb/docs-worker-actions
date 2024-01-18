@@ -9694,7 +9694,6 @@ async function getLastReleaseDockerfile() {
     ]);
     const { graphql } = github.getOctokit(githubToken);
     const gqlResponse = await graphql(prevReleaseQuery);
-    console.log(JSON.stringify(gqlResponse, null, 4));
     // flattening it to make it more readable
     const releases = gqlResponse.repository.releases.nodes.map(node => node.tag.target.oid);
     const previousReleaseHash = releases.filter(commitHash => commitHash !== github.context.sha)[0];
@@ -9710,6 +9709,7 @@ async function main() {
     ]);
     const currentParserVersion = getParserVersion(dockerfileEnhanced);
     const previousParserVersion = getParserVersion(previousDockerfileEnhanced);
+    console.log(currentParserVersion, previousParserVersion);
     core.setOutput('shouldRebuildCaches', `${currentParserVersion !== previousParserVersion}`);
 }
 main();
