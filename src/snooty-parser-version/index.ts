@@ -1,95 +1,16 @@
 import fs from 'fs';
 import { promisify } from 'util';
-import * as github from '@actions/github';
 import * as core from '@actions/core';
-import path from 'path';
+import { getLastReleaseDockerfile } from './src/get-last-dockerfile';
+import { getParserVersion } from './src/get-parser-version';
 
 const readFileAsync = promisify(fs.readFile);
 
-function getParserVersion(dockerfileStr: string): string {
-  // Searches for the SNOOTY_PARSER_VERSION in Dockerfile.enhanced.
-  // This should return an array with a single element e.g. [ 'SNOOTY_PARSER_VERSION=0.15.2' ]
-  const matchResult = dockerfileStr.match(/SNOOTY_PARSER_VERSION=\d+.\d+.\d?/g);
-
-  if (!matchResult)
-    throw new Error(
-      'ERROR! Could not find SNOOTY_PARSER_VERSION in Dockerfile.enhanced',
-    );
-
-  // Grabbing the string 'SNOOTY_PARSER_VERSION=0.15.2', splitting using the '=' as the
-  // delimiter, and then grabbing the second value which should be the parser version.
-  const currentVersion = matchResult[0].split('=')[1];
-
-  // Trimming just in case any extra whitespace finds its way into the result
-  return currentVersion.trim();
-}
-
-interface GetReleaseQueryResponse {
-  repository: {
-    releases: {
-      nodes: Array<{
-        tag: {
-          target: {
-            oid: string;
-          };
-        };
-      }>;
-    };
-  };
-}
-
-interface GetDockerfileQueryResponse {
-  repository: {
-    dockerfile: {
-      text: string;
-    };
-  };
-}
-
-async function getLastReleaseDockerfile(): Promise<string> {
-  const githubToken = process.env.GITHUB_TOKEN;
-
-  if (!githubToken) {
-    core.error('ERROR! GITHUB_TOKEN is not set as an environment variable.');
-
-    throw new Error('Failed. GITHUB_TOKEN is not set.');
-  }
-
-  const GQL_DIR = path.join(__dirname, 'gql');
-  const [prevReleaseQuery, getDockerfileQuery] = await Promise.all([
-    readFileAsync(`${GQL_DIR}/prev-release-query.gql`).then(result =>
-      result.toString(),
-    ),
-    readFileAsync(`${GQL_DIR}/get-dockerfile-by-commit-hash.gql`).then(result =>
-      result.toString(),
-    ),
-  ]);
-
-  const { graphql } = github.getOctokit(githubToken);
-
-  const gqlResponse = await graphql<GetReleaseQueryResponse>(prevReleaseQuery);
-
-  // flattening it to make it more readable
-  const releaseGitHashes = gqlResponse.repository.releases.nodes.map(
-    node => node.tag.target.oid,
-  );
-
-  const previousReleaseHash = releaseGitHashes.filter(
-    // UNCOMMENT THIS OUT! Removing for testing purposes temporarily
-    // commitHash => commitHash !== github.context.sha,
-    commitHash => commitHash !== '4421b1a5cc92646259b76694d1147ac22b98a969',
-  )[0];
-
-  const getDockerfileResponse = await graphql<GetDockerfileQueryResponse>(
-    getDockerfileQuery,
-    {
-      hashWithFilename: `${previousReleaseHash}:Dockerfile.enhanced`,
-    },
-  );
-
-  return getDockerfileResponse.repository.dockerfile.text;
-}
-
+/**
+ * This custom action determines whether or not to rebuild the Snooty parse cache files.
+ * It's determined based on the current release and previous release of the docs-worker-pool.
+ * The value of the `SNOOTY_PARSER_VERSION` is compared between the two. The value in the Dockerfile.enhanced is used.
+ */
 async function main(): Promise<void> {
   const [dockerfileEnhanced, previousDockerfileEnhanced] = await Promise.all([
     readFileAsync('Dockerfile.enhanced').then(result => result.toString()),
@@ -103,6 +24,8 @@ async function main(): Promise<void> {
   console.log(`CURRENT RELEASE PARSER VERSION: ${currentParserVersion}`);
   console.log(`PREVIOUS RELEASE PARSER VERSION: ${previousParserVersion}`);
 
+  // TODO: Instead of setting an output, we will want to send a request to the API Gateway endpoint in the scenario that
+  // we want to rebuild the caches.
   core.setOutput(
     'shouldRebuildCaches',
     `${currentParserVersion !== previousParserVersion}`,

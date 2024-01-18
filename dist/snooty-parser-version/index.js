@@ -9665,10 +9665,108 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const util_1 = __nccwpck_require__(3837);
+const core = __importStar(__nccwpck_require__(2186));
+const get_last_dockerfile_1 = __nccwpck_require__(955);
+const get_parser_version_1 = __nccwpck_require__(149);
+const readFileAsync = (0, util_1.promisify)(fs_1.default.readFile);
+/**
+ * This custom action determines whether or not to rebuild the Snooty parse cache files.
+ * It's determined based on the current release and previous release of the docs-worker-pool.
+ * The value of the `SNOOTY_PARSER_VERSION` is compared between the two. The value in the Dockerfile.enhanced is used.
+ */
+async function main() {
+    const [dockerfileEnhanced, previousDockerfileEnhanced] = await Promise.all([
+        readFileAsync('Dockerfile.enhanced').then(result => result.toString()),
+        (0, get_last_dockerfile_1.getLastReleaseDockerfile)(),
+    ]);
+    const currentParserVersion = (0, get_parser_version_1.getParserVersion)(dockerfileEnhanced);
+    const previousParserVersion = (0, get_parser_version_1.getParserVersion)(previousDockerfileEnhanced);
+    // keeping this logging here to verify we are parsing the correct versions.
+    console.log(`CURRENT RELEASE PARSER VERSION: ${currentParserVersion}`);
+    console.log(`PREVIOUS RELEASE PARSER VERSION: ${previousParserVersion}`);
+    // TODO: Instead of setting an output, we will want to send a request to the API Gateway endpoint in the scenario that
+    // we want to rebuild the caches.
+    core.setOutput('shouldRebuildCaches', `${currentParserVersion !== previousParserVersion}`);
+}
+main();
+
+
+/***/ }),
+
+/***/ 955:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getLastReleaseDockerfile = void 0;
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const util_1 = __nccwpck_require__(3837);
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const readFileAsync = (0, util_1.promisify)(fs_1.default.readFile);
+async function getLastReleaseDockerfile() {
+    const githubToken = process.env.GITHUB_TOKEN;
+    if (!githubToken) {
+        core.error('ERROR! GITHUB_TOKEN is not set as an environment variable.');
+        throw new Error('Failed. GITHUB_TOKEN is not set.');
+    }
+    const GQL_DIR = path_1.default.join(__dirname, 'gql');
+    const [prevTwoReleasesQuery, getDockerfileQuery] = await Promise.all([
+        readFileAsync(`${GQL_DIR}/prev-release-query.gql`).then(result => result.toString()),
+        readFileAsync(`${GQL_DIR}/get-dockerfile-by-commit-hash.gql`).then(result => result.toString()),
+    ]);
+    const { graphql } = github.getOctokit(githubToken);
+    const prevTwoReleasesResponse = await graphql(prevTwoReleasesQuery);
+    // flattening it to make it more readable
+    const releaseGitHashes = prevTwoReleasesResponse.repository.releases.nodes.map(node => node.tag.target.oid);
+    // the GQL query returns the current and previous release. The `github.context.sha` contains
+    // the current release's Git commit SHA, so we filter it out.
+    const previousReleaseHash = releaseGitHashes.filter(commitHash => commitHash !== github.context.sha)[0];
+    const getDockerfileResponse = await graphql(getDockerfileQuery, {
+        hashWithFilename: `${previousReleaseHash}:Dockerfile.enhanced`,
+    });
+    return getDockerfileResponse.repository.dockerfile.text;
+}
+exports.getLastReleaseDockerfile = getLastReleaseDockerfile;
+
+
+/***/ }),
+
+/***/ 149:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getParserVersion = void 0;
 function getParserVersion(dockerfileStr) {
     // Searches for the SNOOTY_PARSER_VERSION in Dockerfile.enhanced.
     // This should return an array with a single element e.g. [ 'SNOOTY_PARSER_VERSION=0.15.2' ]
@@ -9681,43 +9779,7 @@ function getParserVersion(dockerfileStr) {
     // Trimming just in case any extra whitespace finds its way into the result
     return currentVersion.trim();
 }
-async function getLastReleaseDockerfile() {
-    const githubToken = process.env.GITHUB_TOKEN;
-    if (!githubToken) {
-        core.error('ERROR! GITHUB_TOKEN is not set as an environment variable.');
-        throw new Error('Failed. GITHUB_TOKEN is not set.');
-    }
-    const GQL_DIR = path_1.default.join(__dirname, 'gql');
-    const [prevReleaseQuery, getDockerfileQuery] = await Promise.all([
-        readFileAsync(`${GQL_DIR}/prev-release-query.gql`).then(result => result.toString()),
-        readFileAsync(`${GQL_DIR}/get-dockerfile-by-commit-hash.gql`).then(result => result.toString()),
-    ]);
-    const { graphql } = github.getOctokit(githubToken);
-    const gqlResponse = await graphql(prevReleaseQuery);
-    // flattening it to make it more readable
-    const releaseGitHashes = gqlResponse.repository.releases.nodes.map(node => node.tag.target.oid);
-    const previousReleaseHash = releaseGitHashes.filter(
-    // UNCOMMENT THIS OUT! Removing for testing purposes temporarily
-    // commitHash => commitHash !== github.context.sha,
-    commitHash => commitHash !== '4421b1a5cc92646259b76694d1147ac22b98a969')[0];
-    const getDockerfileResponse = await graphql(getDockerfileQuery, {
-        hashWithFilename: `${previousReleaseHash}:Dockerfile.enhanced`,
-    });
-    return getDockerfileResponse.repository.dockerfile.text;
-}
-async function main() {
-    const [dockerfileEnhanced, previousDockerfileEnhanced] = await Promise.all([
-        readFileAsync('Dockerfile.enhanced').then(result => result.toString()),
-        getLastReleaseDockerfile(),
-    ]);
-    const currentParserVersion = getParserVersion(dockerfileEnhanced);
-    const previousParserVersion = getParserVersion(previousDockerfileEnhanced);
-    // keeping this logging here to verify we are parsing the correct versions.
-    console.log(`CURRENT RELEASE PARSER VERSION: ${currentParserVersion}`);
-    console.log(`PREVIOUS RELEASE PARSER VERSION: ${previousParserVersion}`);
-    core.setOutput('shouldRebuildCaches', `${currentParserVersion !== previousParserVersion}`);
-}
-main();
+exports.getParserVersion = getParserVersion;
 
 
 /***/ }),
