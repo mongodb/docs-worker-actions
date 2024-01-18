@@ -1,0 +1,10 @@
+name: 'docs-worker-actions'
+description: 'Parse output from AWS CDK deployment to display API Gateway endpoint'
+author: 'MongoDB'
+runs:
+  using: node20
+  main: ../dist/snooty-parser-version/index.js
+
+outputs:
+  shouldRebuildCaches:
+    description: A boolean representing whether or not to rebuild Snooty parse caches.
