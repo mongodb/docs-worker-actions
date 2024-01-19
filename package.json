@@ -71,7 +71,9 @@
   "dependencies": {
     "@actions/core": "^1.10.1",
     "@actions/exec": "^1.1.1",
-    "@actions/github": "^5.1.1"
+    "@actions/github": "^5.1.1",
+    "@aws-sdk/client-ssm": "^3.496.0",
+    "mongodb": "^6.3.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
