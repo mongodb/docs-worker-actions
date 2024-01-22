@@ -3,7 +3,7 @@ import { MongoClient } from 'mongodb';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 
-async function getParameters(env: string): Promise<unknown> {
+async function getParameters(env: string): Promise<Record<string, string>> {
   const parameters = [''];
   const ssmPrefix = `/env/${env}/docs/worker_pool`;
   const ssmClient = new SSMClient({ region: process.env.CDK_DEFAULT_REGION });
@@ -42,8 +42,15 @@ async function getParameters(env: string): Promise<unknown> {
   return parametersMap;
 }
 
-async function getMongoClient(): Promise<void> {
-  const client = new MongoClient('');
+async function getMongoClient({
+  MONGO_ATLAS_PASSWORD,
+  MONGO_ATLAS_USERNAME,
+  MONGO_ATLAS_HOST,
+}: Record<string, string>): Promise<void> {
+  const atlasUrl = `mongodb+srv://${MONGO_ATLAS_USERNAME}:${MONGO_ATLAS_PASSWORD}@${MONGO_ATLAS_HOST}/admin?retryWrites=true`;
+  const client = new MongoClient(atlasUrl);
+
+  await client.connect();
 }
 
 /**
