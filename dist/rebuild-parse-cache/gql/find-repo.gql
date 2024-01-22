@@ -1,0 +1,11 @@
+query findRepo($searchString: String!) {
+  search(type: REPOSITORY, query: $searchString, last: 5) {
+    repos: edges {
+      repo: node {
+        ... on Repository {
+          url
+        }
+      }
+    }
+  }
+}
