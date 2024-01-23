@@ -1,0 +1,6 @@
+name: 'docs-worker-actions'
+description: 'Build Atlas cloud-docs html and save to artifacts'
+author: 'MongoDB'
+runs:
+  using: node20
+  main: ../dist/build-artifact/index.js
