@@ -64,6 +64,10 @@ async function getMongoClient({
   return client.connect();
 }
 
+export interface RepoInfo {
+  repoOwner: string;
+  repoName: string;
+}
 interface RepoBranchEntry {
   repoName: string;
 }
@@ -100,12 +104,27 @@ export async function getRepos(): Promise<void> {
   const cursor = reposBranchesCollection.find<RepoBranchEntry>({});
 
   const GQL_DIR = path.join(__dirname, 'gql');
+
+  const repos: RepoInfo[] = [];
   const findRepoQuery = (
     await readFileAsync(`${GQL_DIR}/find-repo.gql`)
   ).toString();
   cursor.map(async ({ repoName }) => {
     const searchString = `repo:mongodb/${repoName} repo:10gen/${repoName}`;
 
-    await graphql<FindRepoResponse>(findRepoQuery, { searchString });
+    const response = await graphql<FindRepoResponse>(findRepoQuery, {
+      searchString,
+    });
+
+    // Some sites have an internal and external representation (e.g. docs-monorepo is a repository in both 10gen and mongodb)
+    const repoOwners = response.search.repos.map(
+      ({ repo }) =>
+        ({
+          repoOwner: repo.owner.login,
+          repoName,
+        }) as RepoInfo,
+    );
+
+    repos.push(...repoOwners);
   });
 }
