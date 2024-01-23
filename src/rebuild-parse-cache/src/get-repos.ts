@@ -8,8 +8,6 @@ import fs from 'fs';
 
 const readFileAsync = promisify(fs.readFile);
 
-const MONGODB_ORG = 'mongodb';
-const TEN_GEN_ORG = '10gen';
 async function getParameters(env: string): Promise<Record<string, string>> {
   const ssmPrefix = `/env/${env}/docs/worker_pool`;
   const ssmClient = new SSMClient({ region: process.env.CDK_DEFAULT_REGION });
@@ -106,7 +104,7 @@ export async function getRepos(): Promise<void> {
     await readFileAsync(`${GQL_DIR}/find-repo.gql`)
   ).toString();
   cursor.map(async ({ repoName }) => {
-    const searchString = `repo:${MONGODB_ORG}/${repoName} repo:${TEN_GEN_ORG}/${repoName}`;
+    const searchString = `repo:mongodb/${repoName} repo:10gen/${repoName}`;
 
     await graphql<FindRepoResponse>(findRepoQuery, { searchString });
   });
