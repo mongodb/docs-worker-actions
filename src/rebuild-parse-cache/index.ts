@@ -51,6 +51,8 @@ async function main(): Promise<void> {
       throw new Error(`Could not send request. Response code: ${e.code}`);
     }
     throw new Error('could not send request');
+  } finally {
+    process.exit(0);
   }
 }
 

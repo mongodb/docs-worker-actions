@@ -171,6 +171,7 @@ export async function getRepos(): Promise<RepoInfo[]> {
     );
   } finally {
     await cursor.close();
+    await client.close();
   }
 
   return repos;
