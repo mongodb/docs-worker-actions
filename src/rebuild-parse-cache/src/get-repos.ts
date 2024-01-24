@@ -115,7 +115,7 @@ interface FindRepoResponse {
  * Get repos branches entries from atlas and verify owner by
  * using the GitHub API to search for the repo URL.
  */
-export async function getRepos(): Promise<void> {
+export async function getRepos(): Promise<RepoInfo[]> {
   const githubToken = process.env.GITHUB_TOKEN;
 
   if (!githubToken) {
@@ -160,4 +160,6 @@ export async function getRepos(): Promise<void> {
 
     repos.push(...repoOwners);
   });
+
+  return repos;
 }
