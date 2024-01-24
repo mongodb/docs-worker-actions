@@ -53,7 +53,7 @@ async function main(): Promise<void> {
     ],
     { cwd: `${WORKSPACE}/cdk-infra` },
   );
-
+  console.log('SENDING REQUEST');
   const repos = await getRepos();
   const apiKey = await getApiKey();
   const CACHE_UPDATE_URL =
