@@ -30,9 +30,6 @@ async function main(): Promise<void> {
   console.log(`CURRENT RELEASE PARSER VERSION: ${currentParserVersion}`);
   console.log(`PREVIOUS RELEASE PARSER VERSION: ${previousParserVersion}`);
 
-  // TODO: Instead of setting an output, we will want to send a request to the API Gateway endpoint in the scenario that
-  // we want to rebuild the caches.
-
   if (currentParserVersion !== previousParserVersion) return;
   await Promise.all([
     exec.exec('npm', ['ci'], { cwd: `${WORKSPACE}` }),
@@ -42,20 +39,20 @@ async function main(): Promise<void> {
     }),
   ]);
 
-  await exec.exec(
-    'npm',
-    [
-      'run',
-      'deploy:feature:stack',
-      '--',
-      '-c',
-      'customFeatureName=cacheUpdater',
-      '-c',
-      `snootyParserVersion=${currentParserVersion}`,
-      'auto-builder-stack-cacheUpdater-cache',
-    ],
-    { cwd: `${WORKSPACE}/cdk-infra` },
-  );
+  // await exec.exec(
+  //   'npm',
+  //   [
+  //     'run',
+  //     'deploy:feature:stack',
+  //     '--',
+  //     '-c',
+  //     'customFeatureName=cacheUpdater',
+  //     '-c',
+  //     `snootyParserVersion=${currentParserVersion}`,
+  //     'auto-builder-stack-cacheUpdater-cache',
+  //   ],
+  //   { cwd: `${WORKSPACE}/cdk-infra` },
+  // );
 
   const repos = await getRepos();
   const apiKey = await getApiKey();
