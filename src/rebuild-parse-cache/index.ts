@@ -36,7 +36,10 @@ async function main(): Promise<void> {
   if (currentParserVersion !== previousParserVersion) return;
   await Promise.all([
     exec.exec('npm', ['ci'], { cwd: `${WORKSPACE}` }),
-    exec.exec('npm', ['ci'], { cwd: `${WORKSPACE}/cdk-infra` }),
+    exec.exec('npm', ['ci'], {
+      cwd: `${WORKSPACE}/cdk-infra`,
+      listeners: { stdout: data => console.log(data.toString()) },
+    }),
   ]);
 
   await exec.exec(
