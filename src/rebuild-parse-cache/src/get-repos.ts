@@ -8,7 +8,7 @@ import fs from 'fs';
 import {
   APIGatewayClient,
   GetApiKeyCommand,
-} from '@aws-sdk/client-api-gateway'; // ES Modules import
+} from '@aws-sdk/client-api-gateway';
 
 const readFileAsync = promisify(fs.readFile);
 
@@ -41,19 +41,24 @@ async function getParameters(env: string): Promise<Record<string, string>> {
         WithDecryption: true,
       });
 
-      const ssmResponse = await ssmClient.send(getParamCommand);
-      const paramString = ssmResponse.Parameter?.Value;
-
       const envName = pathToEnvMap.get(fullParamPath);
 
-      if (!envName || !paramString) {
-        console.error(
-          `ERROR! Could not retrieve string for the following param: ${paramName}`,
-        );
-        return;
-      }
+      try {
+        const ssmResponse = await ssmClient.send(getParamCommand);
+        const paramString = ssmResponse.Parameter?.Value;
 
-      parametersMap[envName] = paramString;
+        if (!envName || !paramString) {
+          console.error(
+            `ERROR! Could not retrieve string for the following param: ${paramName}`,
+          );
+          return;
+        }
+
+        core.setSecret(paramString);
+        parametersMap[envName] = paramString;
+      } catch (e) {
+        console.error(`Could not retrieve ${envName}`);
+      }
     }),
   );
   return parametersMap;
@@ -66,8 +71,12 @@ async function getMongoClient({
 }: Record<string, string>): Promise<MongoClient> {
   const atlasUrl = `mongodb+srv://${MONGO_ATLAS_USERNAME}:${MONGO_ATLAS_PASSWORD}@${MONGO_ATLAS_HOST}/admin?retryWrites=true`;
   const client = new MongoClient(atlasUrl);
-
-  return client.connect();
+  try {
+    const connectedClient = await client.connect();
+    return connectedClient;
+  } catch (e) {
+    throw new Error('Failed to connect to DB');
+  }
 }
 
 export async function getApiKey(): Promise<string> {
@@ -80,9 +89,9 @@ export async function getApiKey(): Promise<string> {
   });
 
   const { value } = await client.send(command);
-
   if (!value) throw new Error('No value found for API key');
 
+  core.setSecret(value);
   return value;
 }
 
@@ -131,6 +140,7 @@ export async function getRepos(): Promise<void> {
   const findRepoQuery = (
     await readFileAsync(`${GQL_DIR}/find-repo.gql`)
   ).toString();
+
   cursor.map(async ({ repoName }) => {
     const searchString = `repo:mongodb/${repoName} repo:10gen/${repoName}`;
 
