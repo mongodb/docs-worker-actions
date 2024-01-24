@@ -35,7 +35,6 @@ async function main(): Promise<void> {
     exec.exec('npm', ['ci'], { cwd: `${WORKSPACE}` }),
     exec.exec('npm', ['ci'], {
       cwd: `${WORKSPACE}/cdk-infra`,
-      listeners: { stdout: data => console.log(data.toString()) },
     }),
   ]);
 
@@ -53,14 +52,13 @@ async function main(): Promise<void> {
     ],
     { cwd: `${WORKSPACE}/cdk-infra` },
   );
-  console.log('SENDING REQUEST');
   const repos = await getRepos();
   const apiKey = await getApiKey();
   const CACHE_UPDATE_URL =
     'https://aawdhgnscj.execute-api.us-east-2.amazonaws.com/prod/webhook';
 
   try {
-    axios.post(CACHE_UPDATE_URL, repos, {
+    await axios.post(CACHE_UPDATE_URL, repos, {
       headers: {
         'x-api-key': apiKey,
       },
