@@ -59,7 +59,11 @@ export type SnootyPageData = {
  An Asset map by checksum 
  */
 export type Assets = {
-  [checksum: string]: string[];
+  [checksum: string]: {
+    checksum: string;
+    assetData: string;
+    filenames: string[];
+  };
 }
 
 
@@ -86,7 +90,7 @@ export async function run(): Promise<void> {
       } else if (parsedLine.type === 'metadata') {
         metadata = parsedLine.data;
       } else if (parsedLine.type === 'asset') {
-        assets = parsedLine.data;
+        assets[parsedLine.data.checksum] = parsedLine.data;
       }
     }).on('close', function(){
       const writable = fs.createWriteStream('snooty-documents.json', { flags:'w' });

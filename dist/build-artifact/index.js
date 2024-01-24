@@ -39,7 +39,7 @@ async function run() {
                 metadata = parsedLine.data;
             }
             else if (parsedLine.type === 'asset') {
-                assets = parsedLine.data;
+                assets[parsedLine.data.checksum] = parsedLine.data;
             }
         }).on('close', function () {
             const writable = fs_1.default.createWriteStream('snooty-documents.json', { flags: 'w' });
