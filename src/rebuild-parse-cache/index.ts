@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { promisify } from 'util';
+import * as github from '@actions/github';
 
 import { getLastReleaseDockerfile } from './src/get-last-dockerfile';
 import { getParserVersion } from './src/get-parser-version';
@@ -14,8 +15,12 @@ const readFileAsync = promisify(fs.readFile);
  * The value of the `SNOOTY_PARSER_VERSION` is compared between the two. The value in the Dockerfile.enhanced is used.
  */
 async function main(): Promise<void> {
+  const WORKSPACE = process.env.WORKSPACE;
+
   const [dockerfileEnhanced, previousDockerfileEnhanced] = await Promise.all([
-    readFileAsync('Dockerfile.enhanced').then(result => result.toString()),
+    readFileAsync(`${WORKSPACE}/Dockerfile.enhanced`).then(result =>
+      result.toString(),
+    ),
     getLastReleaseDockerfile(),
   ]);
 
