@@ -33,7 +33,7 @@
     "package:module": "ncc build",
     "package:comment-pr": "ncc build src/comment-pr/index.ts --license licenses.txt -o dist/comment-pr",
     "package:rebuild-parse-cache": "ncc build src/rebuild-parse-cache/index.ts --license licenses.txt -o dist/rebuild-parse-cache",
-    "package": "npm run package:comment-pr && npm run package:snooty-parser-version",
+    "package": "npm run package:comment-pr && npm run package:rebuild-parse-cache",
     "package:watch": "npm run package -- --watch",
     "test": "(jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
     "all": "npm run format:write && npm run lint && npm run test && npm run package"
