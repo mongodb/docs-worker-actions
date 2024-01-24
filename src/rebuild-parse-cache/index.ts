@@ -4,7 +4,7 @@ import { promisify } from 'util';
 import { getLastReleaseDockerfile } from './src/get-last-dockerfile';
 import { getParserVersion } from './src/get-parser-version';
 import { getApiKey, getRepos } from './src/get-repos';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const readFileAsync = promisify(fs.readFile);
 
@@ -40,11 +40,18 @@ async function main(): Promise<void> {
   const CACHE_UPDATE_URL =
     'https://aawdhgnscj.execute-api.us-east-2.amazonaws.com/prod/webhook';
 
-  axios.post(CACHE_UPDATE_URL, repos, {
-    headers: {
-      'x-api-key': apiKey,
-    },
-  });
+  try {
+    axios.post(CACHE_UPDATE_URL, repos, {
+      headers: {
+        'x-api-key': apiKey,
+      },
+    });
+  } catch (e) {
+    if (e instanceof AxiosError) {
+      throw new Error(`Could not send request. Response code: ${e.code}`);
+    }
+    throw new Error('could not send request');
+  }
 }
 
 main();
