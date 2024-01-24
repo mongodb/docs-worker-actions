@@ -18,10 +18,10 @@ async function getParameters(env: string): Promise<Record<string, string>> {
   const ssmPrefix = `/env/${env}/docs/worker_pool`;
   const ssmClient = new SSMClient({ region: REGION });
   const parameters = [
-    `${ssmPrefix}/atlas/password`,
-    `${ssmPrefix}/atlas/username`,
-    `${ssmPrefix}/atlas/host`,
-    `${ssmPrefix}/atlas/dbname`,
+    '/atlas/password',
+    '/atlas/username',
+    '/atlas/host',
+    '/atlas/dbname',
   ];
 
   const pathToEnvMap: Map<string, string> = new Map();

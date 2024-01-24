@@ -1,6 +1,5 @@
 import fs from 'fs';
 import { promisify } from 'util';
-import * as github from '@actions/github';
 
 import { getLastReleaseDockerfile } from './src/get-last-dockerfile';
 import { getParserVersion } from './src/get-parser-version';
@@ -33,6 +32,8 @@ async function main(): Promise<void> {
 
   // TODO: Instead of setting an output, we will want to send a request to the API Gateway endpoint in the scenario that
   // we want to rebuild the caches.
+
+  // if (currentParserVersion !== previousParserVersion) return;
 
   const repos = await getRepos();
   const apiKey = await getApiKey();
