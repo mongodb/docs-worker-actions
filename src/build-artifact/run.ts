@@ -55,6 +55,13 @@ export type SnootyPageData = {
   deleted: boolean;
 };
 
+/**
+ An Asset map by checksum 
+ */
+export type Assets = {
+  [checksum: string]: string[];
+}
+
 
 export async function run(): Promise<void> {
   try {
@@ -67,8 +74,9 @@ export async function run(): Promise<void> {
 
     const documents: SnootyPageData[] = [];
     let metadata: SnootyManifestEntry;
+    let assets: Assets = {};
 
-    await readline.createInterface({
+    readline.createInterface({
         input: fs.createReadStream(file),
         terminal: false
     }).on('line', function(line: string) {
@@ -77,12 +85,16 @@ export async function run(): Promise<void> {
         documents.push(parsedLine.data)
       } else if (parsedLine.type === 'metadata') {
         metadata = parsedLine.data;
+      } else if (parsedLine.type === 'asset') {
+        assets = parsedLine.data;
       }
     }).on('close', function(){
       const writable = fs.createWriteStream('snooty-documents.json', {flags:'w'});
       writable.write(JSON.stringify(documents));
       const metadataWriter = fs.createWriteStream('snooty-metadata.json', {flags:'w'});
       metadataWriter.write(JSON.stringify(metadata));
+      const assetWriter = fs.createWriteStream('snooty-assets.json', { flags: 'w' });
+      assetWriter.write(JSON.stringify(assets));
     });
 
     console.log('now should git clone and run snooty...')
