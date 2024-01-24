@@ -30,6 +30,7 @@ interface GetDockerfileQueryResponse {
 
 export async function getLastReleaseDockerfile(): Promise<string> {
   const githubToken = process.env.GITHUB_TOKEN;
+  const tagSha = process.env.TEST_SHA ?? github.context.sha;
 
   if (!githubToken) {
     core.error('ERROR! GITHUB_TOKEN is not set as an environment variable.');
@@ -61,7 +62,7 @@ export async function getLastReleaseDockerfile(): Promise<string> {
   // the GQL query returns the current and previous release. The `github.context.sha` contains
   // the current release's Git commit SHA, so we filter it out.
   const previousReleaseHash = releaseGitHashes.filter(
-    commitHash => commitHash !== github.context.sha,
+    commitHash => commitHash !== tagSha,
   )[0];
 
   const getDockerfileResponse = await graphql<GetDockerfileQueryResponse>(

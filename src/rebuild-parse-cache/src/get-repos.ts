@@ -5,12 +5,18 @@ import * as github from '@actions/github';
 import path from 'path';
 import { promisify } from 'util';
 import fs from 'fs';
+import {
+  APIGatewayClient,
+  GetApiKeyCommand,
+} from '@aws-sdk/client-api-gateway'; // ES Modules import
 
 const readFileAsync = promisify(fs.readFile);
 
+const REGION = 'us-east-2';
+
 async function getParameters(env: string): Promise<Record<string, string>> {
   const ssmPrefix = `/env/${env}/docs/worker_pool`;
-  const ssmClient = new SSMClient({ region: process.env.CDK_DEFAULT_REGION });
+  const ssmClient = new SSMClient({ region: REGION });
   const parameters = [
     `${ssmPrefix}/atlas/password`,
     `${ssmPrefix}/atlas/username`,
@@ -62,6 +68,22 @@ async function getMongoClient({
   const client = new MongoClient(atlasUrl);
 
   return client.connect();
+}
+
+export async function getApiKey(): Promise<string> {
+  const API_KEY_NAME = 'zxccutwa64';
+
+  const client = new APIGatewayClient({ region: REGION });
+  const command = new GetApiKeyCommand({
+    apiKey: API_KEY_NAME,
+    includeValue: true,
+  });
+
+  const { value } = await client.send(command);
+
+  if (!value) throw new Error('No value found for API key');
+
+  return value;
 }
 
 export interface RepoInfo {

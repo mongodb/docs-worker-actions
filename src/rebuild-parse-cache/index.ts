@@ -1,8 +1,10 @@
 import fs from 'fs';
 import { promisify } from 'util';
-import * as core from '@actions/core';
+
 import { getLastReleaseDockerfile } from './src/get-last-dockerfile';
 import { getParserVersion } from './src/get-parser-version';
+import { getApiKey, getRepos } from './src/get-repos';
+import axios from 'axios';
 
 const readFileAsync = promisify(fs.readFile);
 
@@ -26,10 +28,17 @@ async function main(): Promise<void> {
 
   // TODO: Instead of setting an output, we will want to send a request to the API Gateway endpoint in the scenario that
   // we want to rebuild the caches.
-  core.setOutput(
-    'shouldRebuildCaches',
-    `${currentParserVersion !== previousParserVersion}`,
-  );
+
+  const repos = await getRepos();
+  const apiKey = await getApiKey();
+  const CACHE_UPDATE_URL =
+    'https://aawdhgnscj.execute-api.us-east-2.amazonaws.com/prod/webhook';
+
+  axios.post(CACHE_UPDATE_URL, repos, {
+    headers: {
+      'x-api-key': apiKey,
+    },
+  });
 }
 
 main();
