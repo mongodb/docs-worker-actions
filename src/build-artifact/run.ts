@@ -89,9 +89,9 @@ export async function run(): Promise<void> {
         assets = parsedLine.data;
       }
     }).on('close', function(){
-      const writable = fs.createWriteStream('snooty-documents.json', {flags:'w'});
+      const writable = fs.createWriteStream('snooty-documents.json', { flags:'w' });
       writable.write(JSON.stringify(documents));
-      const metadataWriter = fs.createWriteStream('snooty-metadata.json', {flags:'w'});
+      const metadataWriter = fs.createWriteStream('snooty-metadata.json', { flags:'w' });
       metadataWriter.write(JSON.stringify(metadata));
       const assetWriter = fs.createWriteStream('snooty-assets.json', { flags: 'w' });
       assetWriter.write(JSON.stringify(assets));

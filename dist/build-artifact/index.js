@@ -26,7 +26,8 @@ async function run() {
         console.log('downloaded file, I guess');
         const documents = [];
         let metadata;
-        await readline_1.default.createInterface({
+        let assets = {};
+        readline_1.default.createInterface({
             input: fs_1.default.createReadStream(file),
             terminal: false
         }).on('line', function (line) {
@@ -37,11 +38,16 @@ async function run() {
             else if (parsedLine.type === 'metadata') {
                 metadata = parsedLine.data;
             }
+            else if (parsedLine.type === 'asset') {
+                assets = parsedLine.data;
+            }
         }).on('close', function () {
             const writable = fs_1.default.createWriteStream('snooty-documents.json', { flags: 'w' });
             writable.write(JSON.stringify(documents));
             const metadataWriter = fs_1.default.createWriteStream('snooty-metadata.json', { flags: 'w' });
             metadataWriter.write(JSON.stringify(metadata));
+            const assetWriter = fs_1.default.createWriteStream('snooty-assets.json', { flags: 'w' });
+            assetWriter.write(JSON.stringify(assets));
         });
         console.log('now should git clone and run snooty...');
     }
