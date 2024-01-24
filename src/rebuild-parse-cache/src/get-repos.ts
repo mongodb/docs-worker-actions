@@ -22,6 +22,7 @@ async function getParameters(env: string): Promise<Record<string, string>> {
     '/atlas/username',
     '/atlas/host',
     '/atlas/dbname',
+    '/github/bot/password',
   ];
 
   const pathToEnvMap: Map<string, string> = new Map();
@@ -30,6 +31,7 @@ async function getParameters(env: string): Promise<Record<string, string>> {
   pathToEnvMap.set(`${ssmPrefix}/atlas/username`, 'MONGO_ATLAS_USERNAME');
   pathToEnvMap.set(`${ssmPrefix}/atlas/host`, 'MONGO_ATLAS_HOST');
   pathToEnvMap.set(`${ssmPrefix}/atlas/dbname`, 'MONGO_ATLAS_DBNAME');
+  pathToEnvMap.set(`${ssmPrefix}/github/bot/password`, 'GITHUB_BOT_PASSWORD');
 
   const parametersMap: Record<string, string> = {};
 
@@ -121,16 +123,6 @@ interface FindRepoResponse {
  * using the GitHub API to search for the repo URL.
  */
 export async function getRepos(): Promise<RepoInfo[]> {
-  const githubToken = process.env.GITHUB_TOKEN;
-
-  if (!githubToken) {
-    core.error('ERROR! GITHUB_TOKEN is not set as an environment variable.');
-
-    throw new Error('Failed. GITHUB_TOKEN is not set.');
-  }
-
-  const { graphql } = github.getOctokit(githubToken);
-
   const parameters = await getParameters('dotcomstg');
   const client = await getMongoClient(parameters);
 
@@ -146,6 +138,9 @@ export async function getRepos(): Promise<RepoInfo[]> {
   const findRepoQuery = (
     await readFileAsync(`${GQL_DIR}/find-repo.gql`)
   ).toString();
+
+  const githubToken = parameters.GITHUB_BOT_PASSWORD;
+  const { graphql } = github.getOctokit(githubToken);
 
   const repoNames = await cursor.map(({ repoName }) => repoName).toArray();
   try {
