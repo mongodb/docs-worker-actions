@@ -34,17 +34,25 @@ async function main(): Promise<void> {
   // we want to rebuild the caches.
 
   if (currentParserVersion !== previousParserVersion) return;
-
-  await exec.exec('npm', [
-    'run',
-    'deploy:feature:stack',
-    '--',
-    '-c',
-    'customFeatureName=cacheUpdater',
-    '-c',
-    `snootyParserVersion=${currentParserVersion}`,
-    'auto-builder-stack-cacheUpdater-cache',
+  await Promise.all([
+    exec.exec('npm', ['ci'], { cwd: `${WORKSPACE}` }),
+    exec.exec('npm', ['ci'], { cwd: `${WORKSPACE}/cdk-infra` }),
   ]);
+
+  await exec.exec(
+    'npm',
+    [
+      'run',
+      'deploy:feature:stack',
+      '--',
+      '-c',
+      'customFeatureName=cacheUpdater',
+      '-c',
+      `snootyParserVersion=${currentParserVersion}`,
+      'auto-builder-stack-cacheUpdater-cache',
+    ],
+    { cwd: `${WORKSPACE}/cdk-infra` },
+  );
 
   const repos = await getRepos();
   const apiKey = await getApiKey();
