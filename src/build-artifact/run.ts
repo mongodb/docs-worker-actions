@@ -79,9 +79,9 @@ export async function run(): Promise<void> {
         metadata = parsedLine.data;
       }
     }).on('close', function(){
-      const writable = fs.createWriteStream('snooty-documents.js', {flags:'w'});
+      const writable = fs.createWriteStream('snooty-documents.json', {flags:'w'});
       writable.write(JSON.stringify(documents));
-      const metadataWriter = fs.createWriteStream('snooty-metadata.js', {flags:'w'});
+      const metadataWriter = fs.createWriteStream('snooty-metadata.json', {flags:'w'});
       metadataWriter.write(JSON.stringify(metadata));
     });
 

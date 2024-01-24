@@ -38,9 +38,9 @@ async function run() {
                 metadata = parsedLine.data;
             }
         }).on('close', function () {
-            const writable = fs_1.default.createWriteStream('snooty-documents.js', { flags: 'w' });
+            const writable = fs_1.default.createWriteStream('snooty-documents.json', { flags: 'w' });
             writable.write(JSON.stringify(documents));
-            const metadataWriter = fs_1.default.createWriteStream('snooty-metadata.js', { flags: 'w' });
+            const metadataWriter = fs_1.default.createWriteStream('snooty-metadata.json', { flags: 'w' });
             metadataWriter.write(JSON.stringify(metadata));
         });
         console.log('now should git clone and run snooty...');
