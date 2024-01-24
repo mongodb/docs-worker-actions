@@ -69,12 +69,8 @@ export type Assets = {
 
 export async function run(): Promise<void> {
   try {
-    console.log('in action!!')
     const file = 'output.txt'
     await downloadFile("https://snooty-data-api.mongodb.com/projects/cloud-docs/master/documents", file);
-
-    console.log('downloaded file, I guess')
-
 
     const documents: SnootyPageData[] = [];
     let metadata: SnootyManifestEntry;
@@ -100,11 +96,6 @@ export async function run(): Promise<void> {
       const assetWriter = fs.createWriteStream('snooty-assets.json', { flags: 'w' });
       assetWriter.write(JSON.stringify(assets));
     });
-
-    console.log('now should git clone and run snooty...')
-
-
-
   } catch (error) {
     console.log('Error occurred when retrieving Webhook URL', error);
     throw error;
