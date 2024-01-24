@@ -5,7 +5,7 @@ import { getLastReleaseDockerfile } from './src/get-last-dockerfile';
 import { getParserVersion } from './src/get-parser-version';
 import { getApiKey, getRepos } from './src/get-repos';
 import axios, { AxiosError } from 'axios';
-
+import * as exec from '@actions/exec';
 const readFileAsync = promisify(fs.readFile);
 
 /**
@@ -34,6 +34,17 @@ async function main(): Promise<void> {
   // we want to rebuild the caches.
 
   if (currentParserVersion !== previousParserVersion) return;
+
+  await exec.exec('npm', [
+    'run',
+    'deploy:feature:stack',
+    '--',
+    '-c',
+    'customFeatureName=cacheUpdater',
+    '-c',
+    `snootyParserVersion=${currentParserVersion}`,
+    'auto-builder-stack-cacheUpdater-cache',
+  ]);
 
   const repos = await getRepos();
   const apiKey = await getApiKey();
