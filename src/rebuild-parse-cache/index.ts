@@ -53,6 +53,7 @@ async function main(): Promise<void> {
     { cwd: `${WORKSPACE}/cdk-infra` },
   );
   const repos = await getRepos();
+  console.log(repos);
   const apiKey = await getApiKey();
   const CACHE_UPDATE_URL =
     'https://aawdhgnscj.execute-api.us-east-2.amazonaws.com/prod/webhook';
