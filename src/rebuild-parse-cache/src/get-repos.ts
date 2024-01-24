@@ -74,6 +74,11 @@ async function getMongoClient({
   const client = new MongoClient(atlasUrl);
   try {
     const connectedClient = await client.connect();
+
+    process.on('SIGTERM', async () => {
+      await connectedClient.close();
+    });
+
     return connectedClient;
   } catch (e) {
     throw new Error('Failed to connect to DB');
@@ -142,24 +147,28 @@ export async function getRepos(): Promise<RepoInfo[]> {
     await readFileAsync(`${GQL_DIR}/find-repo.gql`)
   ).toString();
 
-  cursor.map(async ({ repoName }) => {
-    const searchString = `repo:mongodb/${repoName} repo:10gen/${repoName}`;
+  const repoNames = await cursor.map(({ repoName }) => repoName).toArray();
 
-    const response = await graphql<FindRepoResponse>(findRepoQuery, {
-      searchString,
-    });
+  await Promise.all(
+    repoNames.map(async repoName => {
+      const searchString = `repo:mongodb/${repoName} repo:10gen/${repoName}`;
 
-    // Some sites have an internal and external representation (e.g. docs-monorepo is a repository in both 10gen and mongodb)
-    const repoOwners = response.search.repos.map(
-      ({ repo }) =>
-        ({
-          repoOwner: repo.owner.login,
-          repoName,
-        }) as RepoInfo,
-    );
+      const response = await graphql<FindRepoResponse>(findRepoQuery, {
+        searchString,
+      });
 
-    repos.push(...repoOwners);
-  });
+      // Some sites have an internal and external representation (e.g. docs-monorepo is a repository in both 10gen and mongodb)
+      const repoOwners = response.search.repos.map(
+        ({ repo }) =>
+          ({
+            repoOwner: repo.owner.login,
+            repoName,
+          }) as RepoInfo,
+      );
+
+      repos.push(...repoOwners);
+    }),
+  );
 
   return repos;
 }
