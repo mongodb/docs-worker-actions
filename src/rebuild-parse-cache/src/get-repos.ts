@@ -148,27 +148,30 @@ export async function getRepos(): Promise<RepoInfo[]> {
   ).toString();
 
   const repoNames = await cursor.map(({ repoName }) => repoName).toArray();
+  try {
+    await Promise.all(
+      repoNames.map(async repoName => {
+        const searchString = `repo:mongodb/${repoName} repo:10gen/${repoName}`;
 
-  await Promise.all(
-    repoNames.map(async repoName => {
-      const searchString = `repo:mongodb/${repoName} repo:10gen/${repoName}`;
+        const response = await graphql<FindRepoResponse>(findRepoQuery, {
+          searchString,
+        });
 
-      const response = await graphql<FindRepoResponse>(findRepoQuery, {
-        searchString,
-      });
+        // Some sites have an internal and external representation (e.g. docs-monorepo is a repository in both 10gen and mongodb)
+        const repoOwners = response.search.repos.map(
+          ({ repo }) =>
+            ({
+              repoOwner: repo.owner.login,
+              repoName,
+            }) as RepoInfo,
+        );
 
-      // Some sites have an internal and external representation (e.g. docs-monorepo is a repository in both 10gen and mongodb)
-      const repoOwners = response.search.repos.map(
-        ({ repo }) =>
-          ({
-            repoOwner: repo.owner.login,
-            repoName,
-          }) as RepoInfo,
-      );
-
-      repos.push(...repoOwners);
-    }),
-  );
+        repos.push(...repoOwners);
+      }),
+    );
+  } finally {
+    await cursor.close();
+  }
 
   return repos;
 }
