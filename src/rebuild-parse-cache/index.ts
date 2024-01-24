@@ -39,20 +39,20 @@ async function main(): Promise<void> {
     }),
   ]);
 
-  // await exec.exec(
-  //   'npm',
-  //   [
-  //     'run',
-  //     'deploy:feature:stack',
-  //     '--',
-  //     '-c',
-  //     'customFeatureName=cacheUpdater',
-  //     '-c',
-  //     `snootyParserVersion=${currentParserVersion}`,
-  //     'auto-builder-stack-cacheUpdater-cache',
-  //   ],
-  //   { cwd: `${WORKSPACE}/cdk-infra` },
-  // );
+  await exec.exec(
+    'npm',
+    [
+      'run',
+      'deploy:feature:stack',
+      '--',
+      '-c',
+      'customFeatureName=cacheUpdater',
+      '-c',
+      `snootyParserVersion=${currentParserVersion}`,
+      'auto-builder-stack-cacheUpdater-cache',
+    ],
+    { cwd: `${WORKSPACE}/cdk-infra` },
+  );
 
   const repos = await getRepos();
   const apiKey = await getApiKey();
