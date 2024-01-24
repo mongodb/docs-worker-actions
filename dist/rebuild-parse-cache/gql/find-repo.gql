@@ -3,7 +3,9 @@ query findRepo($searchString: String!) {
     repos: edges {
       repo: node {
         ... on Repository {
-          url
+          owner {
+            login
+          }
         }
       }
     }
