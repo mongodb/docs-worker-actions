@@ -75,9 +75,7 @@ async function main(): Promise<void> {
   const outputs = JSON.parse(outputsFile);
 
   const webhookUrl = Object.values(
-    outputs[
-      `auto-builder-stack-enhancedApp-stg-${process.env.GITHUB_HEAD_REF}-webhooks`
-    ],
+    outputs[`auto-builder-stack-${process.env.GITHUB_HEAD_REF}-cache`],
   )[0];
 
   const repos = await getRepos();
