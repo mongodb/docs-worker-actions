@@ -83,7 +83,6 @@ async function main(): Promise<void> {
   const repos = await getRepos();
   const apiKey = await getApiKey();
 
-  // NOTE: This URL may need to change.
   const CACHE_UPDATE_URL = `${webhookUrl}webhook`;
 
   try {
