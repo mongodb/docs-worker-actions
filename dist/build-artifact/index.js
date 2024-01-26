@@ -12,57 +12,56 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(147));
-// import * as core from '@actions/core';
-// import * as github from '@actions/github';
 const path_1 = __importDefault(__nccwpck_require__(17));
+const readline_1 = __importDefault(__nccwpck_require__(521));
 const stream_1 = __nccwpck_require__(781);
 const promises_1 = __nccwpck_require__(845);
-const readline_1 = __importDefault(__nccwpck_require__(521));
 async function run() {
     try {
-        console.log('in action!!');
         const file = 'output.txt';
-        await downloadFile("https://snooty-data-api.mongodb.com/projects/cloud-docs/master/documents", file);
-        console.log('downloaded file, I guess');
-        const documents = [];
+        /* Fetch Snooty project build data */
+        await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/projects/cloud-docs/master/documents", file);
         let metadata;
-        let assets = {};
+        const documents = [];
+        const assets = {};
+        /* Write each line to separate files in expected data structure for Snooty */
         readline_1.default.createInterface({
             input: fs_1.default.createReadStream(file),
             terminal: false
-        }).on('line', function (line) {
-            const parsedLine = JSON.parse(line);
-            if (parsedLine.type === 'page') {
-                documents.push(parsedLine.data);
-            }
-            else if (parsedLine.type === 'metadata') {
-                metadata = parsedLine.data;
-            }
-            else if (parsedLine.type === 'asset') {
-                assets[parsedLine.data.checksum] = parsedLine.data;
+        }).on('line', function (lineString) {
+            const line = JSON.parse(lineString);
+            switch (line.type) {
+                case ('page'):
+                    documents.push(line.data);
+                    break;
+                case ('metadata'):
+                    metadata = line.data;
+                    break;
+                case ('assets'):
+                    assets[line.data.checksum] = line.data;
+                    break;
             }
         }).on('close', function () {
-            const writable = fs_1.default.createWriteStream('snooty-documents.json', { flags: 'w' });
-            writable.write(JSON.stringify(documents));
-            const metadataWriter = fs_1.default.createWriteStream('snooty-metadata.json', { flags: 'w' });
+            const documentsWriter = fs_1.default.createWriteStream('snooty-documents.json');
+            documentsWriter.write(JSON.stringify(documents));
+            const metadataWriter = fs_1.default.createWriteStream('snooty-metadata.json');
             metadataWriter.write(JSON.stringify(metadata));
-            const assetWriter = fs_1.default.createWriteStream('snooty-assets.json', { flags: 'w' });
-            assetWriter.write(JSON.stringify(assets));
+            const assetsWriter = fs_1.default.createWriteStream('snooty-assets.json');
+            assetsWriter.write(JSON.stringify(assets));
         });
-        console.log('now should git clone and run snooty...');
     }
     catch (error) {
-        console.log('Error occurred when retrieving Webhook URL', error);
+        console.error('Error occurred when fetching and writing build data for cloud-docs', error);
         throw error;
     }
 }
 exports.run = run;
-const downloadFile = async (url, fileName) => {
-    const res = await fetch(url);
+const downloadSnootyProjectBuildData = async (endpoint, targetFilename) => {
+    const res = await fetch(endpoint);
     if (!res.body)
         return;
-    const destination = path_1.default.resolve("./", fileName);
-    const fileStream = fs_1.default.createWriteStream(destination, { flags: 'wx' });
+    const destination = path_1.default.resolve("./", targetFilename);
+    const fileStream = fs_1.default.createWriteStream(destination);
     await (0, promises_1.finished)(stream_1.Readable.fromWeb(res.body).pipe(fileStream));
 };
 
