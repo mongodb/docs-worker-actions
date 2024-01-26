@@ -37,7 +37,7 @@ async function run() {
                 case ('metadata'):
                     metadata = line.data;
                     break;
-                case ('assets'):
+                case ('asset'):
                     assets[line.data.checksum] = line.data;
                     break;
             }
