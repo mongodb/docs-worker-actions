@@ -1,35 +1,30 @@
 import fs from 'fs';
-// import * as core from '@actions/core';
-// import * as github from '@actions/github';
 import path from 'path';
+import readline from 'readline';
 import { Readable } from 'stream';
 import { finished } from 'stream/promises';
-import readline from 'readline';
 import type * as streamWeb from 'node:stream/web';
+
+/**
+  Typescript necessary declaration:
+  https://stackoverflow.com/questions/73308289/typescript-error-converting-a-native-fetch-body-webstream-to-a-node-stream
+*/
 declare global {
   interface Response {
     readonly body: streamWeb.ReadableStream<Uint8Array> | null;
   }
 }
 
-// These types are what's in the snooty manifest jsonl file.
+// These types are what's in the snooty manifest json file.
 export type SnootyManifestEntry = {
   type: "page" | "timestamp" | "metadata" | "asset";
   data: unknown;
 };
 
 /**
-  Represents a page entry in a Snooty manifest file.
- */
-export type SnootyPageEntry = SnootyManifestEntry & {
-  type: "page";
-  data: SnootyPageData;
-};
-
-/**
   A node in the Snooty AST.
  */
-export type SnootyNode = {
+type SnootyNode = {
   type: string;
   children?: (SnootyNode | SnootyTextNode)[];
   options?: Record<string, unknown>;
@@ -39,7 +34,7 @@ export type SnootyNode = {
 /**
   A Snooty AST node with a text value.
  */
-export type SnootyTextNode = SnootyNode & {
+type SnootyTextNode = SnootyNode & {
   type: "text";
   children: never;
   value: string;
@@ -48,7 +43,7 @@ export type SnootyTextNode = SnootyNode & {
 /**
   A page in the Snooty manifest.
  */
-export type SnootyPageData = {
+type SnootyPageData = {
   page_id: string;
   ast: SnootyNode;
   tags?: string[];
@@ -58,7 +53,7 @@ export type SnootyPageData = {
 /**
  An Asset map by checksum 
  */
-export type Assets = {
+type Assets = {
   [checksum: string]: {
     checksum: string;
     assetData: string;
@@ -70,42 +65,48 @@ export type Assets = {
 export async function run(): Promise<void> {
   try {
     const file = 'output.txt'
-    await downloadFile("https://snooty-data-api.mongodb.com/projects/cloud-docs/master/documents", file);
+    /* Fetch Snooty project build data */
+    await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/projects/cloud-docs/master/documents", file);
 
-    const documents: SnootyPageData[] = [];
     let metadata: SnootyManifestEntry;
-    let assets: Assets = {};
+    const documents: SnootyPageData[] = [];
+    const assets: Assets = {};
 
+    /* Write each line to separate files in expected data structure for Snooty */
     readline.createInterface({
         input: fs.createReadStream(file),
         terminal: false
-    }).on('line', function(line: string) {
-      const parsedLine = JSON.parse(line)
-      if (parsedLine.type === 'page') {
-        documents.push(parsedLine.data)
-      } else if (parsedLine.type === 'metadata') {
-        metadata = parsedLine.data;
-      } else if (parsedLine.type === 'asset') {
-        assets[parsedLine.data.checksum] = parsedLine.data;
+    }).on('line', function(lineString: string) {
+      const line = JSON.parse(lineString);
+      switch(line.type){
+        case('page'): 
+          documents.push(line.data);
+          break;
+        case('metadata'):
+          metadata = line.data;
+          break;
+        case('assets'):
+          assets[line.data.checksum] = line.data;
+          break;
       }
     }).on('close', function(){
-      const writable = fs.createWriteStream('snooty-documents.json', { flags:'w' });
-      writable.write(JSON.stringify(documents));
-      const metadataWriter = fs.createWriteStream('snooty-metadata.json', { flags:'w' });
+      const documentsWriter = fs.createWriteStream('snooty-documents.json');
+      documentsWriter.write(JSON.stringify(documents));
+      const metadataWriter = fs.createWriteStream('snooty-metadata.json');
       metadataWriter.write(JSON.stringify(metadata));
-      const assetWriter = fs.createWriteStream('snooty-assets.json', { flags: 'w' });
-      assetWriter.write(JSON.stringify(assets));
+      const assetsWriter = fs.createWriteStream('snooty-assets.json');
+      assetsWriter.write(JSON.stringify(assets));
     });
   } catch (error) {
-    console.log('Error occurred when retrieving Webhook URL', error);
+    console.error('Error occurred when fetching and writing build data for cloud-docs', error);
     throw error;
   }
 }
 
-const downloadFile = async (url: string, fileName: string) => {
-  const res = await fetch(url);
+const downloadSnootyProjectBuildData = async (endpoint: string, targetFilename: string) => {
+  const res = await fetch(endpoint);
   if (!res.body) return;
-  const destination = path.resolve("./", fileName);
-  const fileStream = fs.createWriteStream(destination, { flags: 'wx' });
+  const destination = path.resolve("./", targetFilename);
+  const fileStream = fs.createWriteStream(destination);
   await finished(Readable.fromWeb(res.body!).pipe(fileStream));
 };
