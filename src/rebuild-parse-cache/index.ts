@@ -62,27 +62,15 @@ async function main(): Promise<void> {
       '-c',
       `snootyParserVersion=${currentParserVersion}`,
       'auto-builder-stack-cacheUpdater-cache',
-      '--outputs-file',
-      'outputs.json',
     ],
     { cwd: `${WORKSPACE}/cdk-infra` },
   );
 
-  const outputsFile = (
-    await readFileAsync('cdk-infra/outputs.json')
-  ).toString();
-
-  const outputs = JSON.parse(outputsFile);
-
-  const webhookUrl = Object.values(
-    outputs[`auto-builder-stack-${process.env.GITHUB_HEAD_REF}-cache`],
-  )[0];
-
   const repos = await getRepos();
   const apiKey = await getApiKey();
 
-  const CACHE_UPDATE_URL = `${webhookUrl}webhook`;
-
+  const CACHE_UPDATE_URL =
+    'https://aawdhgnscj.execute-api.us-east-2.amazonaws.com/prod/webhook';
   try {
     await axios.post(CACHE_UPDATE_URL, repos, {
       headers: {
