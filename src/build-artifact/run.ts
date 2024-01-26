@@ -85,7 +85,7 @@ export async function run(): Promise<void> {
         case('metadata'):
           metadata = line.data;
           break;
-        case('assets'):
+        case('asset'):
           assets[line.data.checksum] = line.data;
           break;
       }
