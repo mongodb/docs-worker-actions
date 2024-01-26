@@ -12,6 +12,18 @@ const readFileAsync = promisify(fs.readFile);
  * This custom action determines whether or not to rebuild the Snooty parse cache files.
  * It's determined based on the current release and previous release of the docs-worker-pool.
  * The value of the `SNOOTY_PARSER_VERSION` is compared between the two. The value in the Dockerfile.enhanced is used.
+ * The following steps take place during the action:
+ *
+ * 1. We check the Dockerfile.enhanced's value for the SNOOTY_PARSER_VERSION build argument from the Dockerfile.enhanced associated with the given build.
+ * It is assumed that the given build is a part of a release.
+ *
+ * 2. We also load the last release's Dockerfile.enhanced, and retrieve the SNOOTY_PARSER_VERSION value from there as well. We then compare the two values.
+ * If the two values differ, we continue with the process.
+ *
+ * 3. If they differ, we then deploy an updated version of the cache updater stack to use the latest version of the Snooty Parser that the Autobuilder is using in the release.
+ *
+ * 4. After the cache updater stack has been deployed with the latest changes, we find all of the doc sites, and then send a post request to the cache updater stack endpoint
+ * with an array of the doc sites.
  */
 async function main(): Promise<void> {
   const WORKSPACE = process.env.WORKSPACE;
@@ -30,7 +42,8 @@ async function main(): Promise<void> {
   console.log(`CURRENT RELEASE PARSER VERSION: ${currentParserVersion}`);
   console.log(`PREVIOUS RELEASE PARSER VERSION: ${previousParserVersion}`);
 
-  if (currentParserVersion !== previousParserVersion) return;
+  if (currentParserVersion === previousParserVersion) return;
+
   await Promise.all([
     exec.exec('npm', ['ci'], { cwd: `${WORKSPACE}` }),
     exec.exec('npm', ['ci'], {
@@ -49,14 +62,29 @@ async function main(): Promise<void> {
       '-c',
       `snootyParserVersion=${currentParserVersion}`,
       'auto-builder-stack-cacheUpdater-cache',
+      '--outputs-file',
+      'outputs.json',
     ],
     { cwd: `${WORKSPACE}/cdk-infra` },
   );
+
+  const outputsFile = (
+    await readFileAsync('cdk-infra/outputs.json')
+  ).toString();
+
+  const outputs = JSON.parse(outputsFile);
+
+  const webhookUrl = Object.values(
+    outputs[
+      `auto-builder-stack-enhancedApp-stg-${process.env.GITHUB_HEAD_REF}-webhooks`
+    ],
+  )[0];
+
   const repos = await getRepos();
   const apiKey = await getApiKey();
 
-  const CACHE_UPDATE_URL =
-    'https://aawdhgnscj.execute-api.us-east-2.amazonaws.com/prod/webhook';
+  // NOTE: This URL may need to change.
+  const CACHE_UPDATE_URL = `${webhookUrl}webhook`;
 
   try {
     await axios.post(CACHE_UPDATE_URL, repos, {
