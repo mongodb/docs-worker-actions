@@ -99,7 +99,7 @@ export async function run(): Promise<void> {
 
       for (const checksum in assets) {
         const assetsWriter = fs.createWriteStream(`assets/${checksum}`);
-        assetsWriter.write(assets[checksum]);
+        assetsWriter.write(JSON.stringify(assets[checksum]));
       }
 
       // const assetsWriter = fs.createWriteStream(`snooty-assets.js`);
