@@ -87,7 +87,7 @@ export async function run(): Promise<void> {
           metadata = line.data;
           break;
         case('asset'):
-          assets[line.data.checksum] = line.data;
+          assets[line.data.checksum] = line.data.assetData;
           break;
       }
     }).on('close', function(){
@@ -100,7 +100,7 @@ export async function run(): Promise<void> {
 
       for (const checksum in assets) {
         const assetsWriter = fs.createWriteStream(`assets/${checksum}`);
-        assetsWriter.write(JSON.stringify(assets[checksum]));
+        assetsWriter.write(assets[checksum]);
       }
 
       // const assetsWriter = fs.createWriteStream(`snooty-assets.js`);
