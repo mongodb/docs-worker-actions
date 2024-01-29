@@ -94,8 +94,17 @@ export async function run(): Promise<void> {
       documentsWriter.write(JSON.stringify(documents));
       const metadataWriter = fs.createWriteStream('snooty-metadata.json');
       metadataWriter.write(JSON.stringify(metadata));
-      const assetsWriter = fs.createWriteStream('snooty-assets.json');
-      assetsWriter.write(JSON.stringify(assets));
+
+      fs.mkdirSync('assets', { recursive: true });
+
+      for (const checksum in assets) {
+        const assetsWriter = fs.createWriteStream(`assets/${checksum}`);
+        assetsWriter.write(assets[checksum]);
+      }
+
+      // const assetsWriter = fs.createWriteStream(`snooty-assets.js`);
+      // assetsWriter.write(assets);
+
     });
   } catch (error) {
     console.error('Error occurred when fetching and writing build data for cloud-docs', error);
