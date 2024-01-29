@@ -30,6 +30,7 @@ async function run() {
             terminal: false
         }).on('line', function (lineString) {
             const line = JSON.parse(lineString);
+            console.log('LINE =====> ', line);
             switch (line.type) {
                 case ('page'):
                     documents.push(line.data);
@@ -49,7 +50,7 @@ async function run() {
             fs_1.default.mkdirSync('assets', { recursive: true });
             for (const checksum in assets) {
                 const assetsWriter = fs_1.default.createWriteStream(`assets/${checksum}`);
-                assetsWriter.write(assets[checksum]);
+                assetsWriter.write(JSON.stringify(assets[checksum]));
             }
             // const assetsWriter = fs.createWriteStream(`snooty-assets.js`);
             // assetsWriter.write(assets);
