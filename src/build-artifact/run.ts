@@ -78,6 +78,7 @@ export async function run(): Promise<void> {
         terminal: false
     }).on('line', function(lineString: string) {
       const line = JSON.parse(lineString);
+      console.log('LINE =====> ',line)
       switch(line.type){
         case('page'): 
           documents.push(line.data);
