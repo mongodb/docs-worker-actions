@@ -46,8 +46,13 @@ async function run() {
             documentsWriter.write(JSON.stringify(documents));
             const metadataWriter = fs_1.default.createWriteStream('snooty-metadata.json');
             metadataWriter.write(JSON.stringify(metadata));
-            const assetsWriter = fs_1.default.createWriteStream('snooty-assets.json');
-            assetsWriter.write(JSON.stringify(assets));
+            fs_1.default.mkdirSync('assets', { recursive: true });
+            for (const checksum in assets) {
+                const assetsWriter = fs_1.default.createWriteStream(`assets/${checksum}`);
+                assetsWriter.write(assets[checksum]);
+            }
+            // const assetsWriter = fs.createWriteStream(`snooty-assets.js`);
+            // assetsWriter.write(assets);
         });
     }
     catch (error) {
