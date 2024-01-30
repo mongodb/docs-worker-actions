@@ -20,7 +20,7 @@ async function run() {
     try {
         const file = 'output.txt';
         /* Fetch Snooty project build data */
-        await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/projects/cloud-docs/master/documents", file);
+        await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/prod/projects/cloud-docs/master/documents", file);
         let metadata;
         const documents = [];
         const assets = {};

@@ -66,7 +66,7 @@ export async function run(): Promise<void> {
   try {
     const file = 'output.txt'
     /* Fetch Snooty project build data */
-    await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/projects/cloud-docs/master/documents", file);
+    await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/prod/projects/cloud-docs/master/documents", file);
 
     let metadata: SnootyManifestEntry;
     const documents: SnootyPageData[] = [];
