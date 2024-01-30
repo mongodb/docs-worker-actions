@@ -1,7 +1,9 @@
 export function getParserVersion(dockerfileStr: string): string {
   // Searches for the SNOOTY_PARSER_VERSION in Dockerfile.enhanced.
   // This should return an array with a single element e.g. [ 'SNOOTY_PARSER_VERSION=0.15.2' ]
-  const matchResult = dockerfileStr.match(/SNOOTY_PARSER_VERSION=\d+.\d+.\d?/g);
+  const matchResult = dockerfileStr.match(
+    /SNOOTY_PARSER_VERSION=\d+.\d+.(\d+)?/g,
+  );
 
   if (!matchResult)
     throw new Error(

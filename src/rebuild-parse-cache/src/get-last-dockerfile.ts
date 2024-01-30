@@ -41,6 +41,8 @@ export async function getLastReleaseDockerfile(): Promise<string> {
   const { graphql } = github.getOctokit(githubToken);
 
   const GQL_DIR = path.join(__dirname, 'gql');
+
+  // The GraphQL files can be found in dist/rebuild-parse-cache/gql
   const [prevTwoReleasesQuery, getDockerfileQuery] = await Promise.all([
     readFileAsync(`${GQL_DIR}/prev-release-query.gql`).then(result =>
       result.toString(),
