@@ -37958,8 +37958,8 @@ const client_ssm_1 = __nccwpck_require__(341);
 async function run() {
     try {
         const parameters = await getParameters('dotcomstg');
-        await exec.exec('git', ['clone', 'https://github.com/10gen/cloud-docs.git']);
-        await exec.exec('git', ['clone', 'https://github.com/mongodb/snooty-parser.git']);
+        await exec.exec('git', ['clone', 'https://docs-builder-bot:${process.env.GITHUB_TOKEN}@github.com/10gen/cloud-docs.git']);
+        await exec.exec('git', ['clone', 'https://docs-builder-bot:${process.env.GITHUB_TOKEN}@github.com/mongodb/snooty-parser.git']);
         await exec.exec('git', ['cd', './snooty-parser']);
         await exec.exec('poetry', ['run', 'snooty', 'build', './cloud-docs', '--output', 'cloud-docs.zip']);
     }
