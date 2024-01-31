@@ -96,7 +96,6 @@ export async function run(): Promise<void> {
       metadataWriter.write(JSON.stringify(metadata));
 
       fs.mkdirSync('assets', { recursive: true });
-
       for (const checksum in assets) {
         const assetsWriter = fs.createWriteStream(`assets/${checksum}`, { encoding: 'base64' });
         assetsWriter.write(assets[checksum]);
