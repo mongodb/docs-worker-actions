@@ -66,7 +66,7 @@ export async function run(): Promise<void> {
   try {
     const file = 'output.txt'
     /* Fetch Snooty project build data */
-    await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/prod/projects/cloud-docs/master/documents", file);
+    await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/projects/cloud-docs/master/documents", file);
 
     let metadata: SnootyManifestEntry;
     const documents: SnootyPageData[] = [];
@@ -78,7 +78,6 @@ export async function run(): Promise<void> {
         terminal: false
     }).on('line', function(lineString: string) {
       const line = JSON.parse(lineString);
-      console.log('LINE =====> ',line)
       switch(line.type){
         case('page'): 
           documents.push(line.data);
@@ -99,13 +98,9 @@ export async function run(): Promise<void> {
       fs.mkdirSync('assets', { recursive: true });
 
       for (const checksum in assets) {
-        const assetsWriter = fs.createWriteStream(`assets/${checksum}`);
+        const assetsWriter = fs.createWriteStream(`assets/${checksum}`, { encoding: 'base64' });
         assetsWriter.write(assets[checksum]);
       }
-
-      // const assetsWriter = fs.createWriteStream(`snooty-assets.js`);
-      // assetsWriter.write(assets);
-
     });
   } catch (error) {
     console.error('Error occurred when fetching and writing build data for cloud-docs', error);

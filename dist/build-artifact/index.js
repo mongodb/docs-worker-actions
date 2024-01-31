@@ -20,7 +20,7 @@ async function run() {
     try {
         const file = 'output.txt';
         /* Fetch Snooty project build data */
-        await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/prod/projects/cloud-docs/master/documents", file);
+        await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/projects/cloud-docs/master/documents", file);
         let metadata;
         const documents = [];
         const assets = {};
@@ -30,7 +30,6 @@ async function run() {
             terminal: false
         }).on('line', function (lineString) {
             const line = JSON.parse(lineString);
-            console.log('LINE =====> ', line);
             switch (line.type) {
                 case ('page'):
                     documents.push(line.data);
@@ -49,11 +48,9 @@ async function run() {
             metadataWriter.write(JSON.stringify(metadata));
             fs_1.default.mkdirSync('assets', { recursive: true });
             for (const checksum in assets) {
-                const assetsWriter = fs_1.default.createWriteStream(`assets/${checksum}`);
+                const assetsWriter = fs_1.default.createWriteStream(`assets/${checksum}`, { encoding: 'base64' });
                 assetsWriter.write(assets[checksum]);
             }
-            // const assetsWriter = fs.createWriteStream(`snooty-assets.js`);
-            // assetsWriter.write(assets);
         });
     }
     catch (error) {
