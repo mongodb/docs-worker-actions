@@ -33,7 +33,6 @@
     "package:module": "ncc build",
     "package:comment-pr": "ncc build src/comment-pr/index.ts --license licenses.txt -o dist/comment-pr",
     "package:build-artifact": "ncc build src/build-artifact/index.ts --license licenses.txt -o dist/build-artifact",
-    "package:build-cloud-docs": "ncc build src/build-cloud-docs/index.ts --license licenses.txt -o dist/build-cloud-docs",
     "package:watch": "npm run package -- --watch",
     "test": "(jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
     "all": "npm run format:write && npm run lint && npm run test && npm run package"
@@ -70,9 +69,7 @@
   },
   "dependencies": {
     "@actions/core": "^1.10.1",
-    "@actions/exec": "^1.1.1",
-    "@actions/github": "^5.1.1",
-    "@aws-sdk/client-ssm": "^3.502.0"
+    "@actions/github": "^5.1.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
