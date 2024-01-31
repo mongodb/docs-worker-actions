@@ -79,9 +79,11 @@ async function main(): Promise<void> {
     });
   } catch (e) {
     if (e instanceof AxiosError) {
-      throw new Error(`Could not send request. Response code: ${e.code}`);
+      console.error(`Could not send request. Response code: ${e.code}`);
+      throw e;
     }
-    throw new Error('could not send request');
+    console.error('could not send request');
+    throw e;
   } finally {
     process.exit(0);
   }

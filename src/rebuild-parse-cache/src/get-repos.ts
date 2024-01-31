@@ -73,7 +73,7 @@ async function getMongoClient({
 }: Record<string, string>): Promise<MongoClient> {
   const atlasUrl = `mongodb+srv://${MONGO_ATLAS_USERNAME}:${MONGO_ATLAS_PASSWORD}@${MONGO_ATLAS_HOST}/admin?retryWrites=true`;
   core.setSecret(atlasUrl);
-  const client = new MongoClient(atlasUrl);
+  const client = new MongoClient(atlasUrl, { appName: 'rebuild-parse-cache' });
   try {
     const connectedClient = await client.connect();
 
