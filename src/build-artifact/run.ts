@@ -61,12 +61,11 @@ type Assets = {
   };
 }
 
-
 export async function run(): Promise<void> {
   try {
     const file = 'output.txt'
     /* Fetch Snooty project build data */
-    await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/projects/cloud-docs/master/documents", file);
+    await downloadSnootyProjectBuildData(`https://snooty-data-api.mongodb.com/projects/${process.env.PROJECT_TO_BUILD}/master/documents`, file);
 
     let metadata: SnootyManifestEntry;
     const documents: SnootyPageData[] = [];
@@ -102,7 +101,7 @@ export async function run(): Promise<void> {
       }
     });
   } catch (error) {
-    console.error('Error occurred when fetching and writing build data for cloud-docs', error);
+    console.error(`Error occurred when fetching and writing build data for ${process.env.PROJECT_TO_BUILD}`, error);
     throw error;
   }
 }

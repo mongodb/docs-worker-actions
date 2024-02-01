@@ -20,7 +20,7 @@ async function run() {
     try {
         const file = 'output.txt';
         /* Fetch Snooty project build data */
-        await downloadSnootyProjectBuildData("https://snooty-data-api.mongodb.com/projects/cloud-docs/master/documents", file);
+        await downloadSnootyProjectBuildData(`https://snooty-data-api.mongodb.com/projects/${process.env.PROJECT_TO_BUILD}/master/documents`, file);
         let metadata;
         const documents = [];
         const assets = {};
@@ -54,7 +54,7 @@ async function run() {
         });
     }
     catch (error) {
-        console.error('Error occurred when fetching and writing build data for cloud-docs', error);
+        console.error(`Error occurred when fetching and writing build data for ${process.env.PROJECT_TO_BUILD}`, error);
         throw error;
     }
 }
