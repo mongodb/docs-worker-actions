@@ -1,0 +1,10 @@
+name: 'docs-worker-actions'
+description: >
+  This custom action determines whether or not to rebuild the Snooty parse cache files. 
+  It's determined based on the current release and previous release of the docs-worker-pool. 
+  The value of the `SNOOTY_PARSER_VERSION` is compared between the two. 
+  The value in the Dockerfile.enhanced is used. This should only be triggered by releases for the docs-worker-pool repository.
+author: 'MongoDB'
+runs:
+  using: node20
+  main: ../dist/rebuild-parse-cache/index.js

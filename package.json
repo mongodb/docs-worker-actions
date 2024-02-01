@@ -29,10 +29,12 @@
     "ci-test": "jest",
     "format:write": "prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
-    "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
+    "lint": "npx eslint . -c ./.eslintrc.yml",
     "package:module": "ncc build",
     "package:comment-pr": "ncc build src/comment-pr/index.ts --license licenses.txt -o dist/comment-pr",
+    "package:rebuild-parse-cache": "ncc build src/rebuild-parse-cache/index.ts --license licenses.txt -o dist/rebuild-parse-cache",
     "package:build-artifact": "ncc build src/build-artifact/index.ts --license licenses.txt -o dist/build-artifact",
+    "package": "npm run package:comment-pr && npm run package:rebuild-parse-cache && npm run package:build-artifact",
     "package:watch": "npm run package -- --watch",
     "test": "(jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
     "all": "npm run format:write && npm run lint && npm run test && npm run package"
@@ -69,7 +71,12 @@
   },
   "dependencies": {
     "@actions/core": "^1.10.1",
-    "@actions/github": "^5.1.1"
+    "@actions/exec": "^1.1.1",
+    "@actions/github": "^5.1.1",
+    "@aws-sdk/client-api-gateway": "^3.496.0",
+    "@aws-sdk/client-ssm": "^3.496.0",
+    "axios": "^1.6.5",
+    "mongodb": "^6.3.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
@@ -86,7 +93,7 @@
     "js-yaml": "^4.1.0",
     "make-coverage-badge": "^1.2.0",
     "prettier": "^3.0.3",
-    "prettier-eslint": "^15.0.1",
+    "prettier-eslint": "^16.0.1",
     "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"
   }

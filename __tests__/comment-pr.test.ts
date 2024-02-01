@@ -2,7 +2,7 @@ import { run } from '../src/comment-pr/run';
 
 // Mock the action's entrypoint
 jest.mock('../src/comment-pr/run', () => ({
-  run: jest.fn()
+  run: jest.fn(),
 }));
 
 describe('index', () => {
