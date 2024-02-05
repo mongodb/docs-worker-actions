@@ -70,7 +70,7 @@ export async function getLastReleaseDockerfile(): Promise<string> {
   const getDockerfileResponse = await graphql<GetDockerfileQueryResponse>(
     getDockerfileQuery,
     {
-      hashWithFilename: `${previousReleaseHash}:Dockerfile.enhanced`,
+      hashWithFilename: `${previousReleaseHash}:Dockerfile`,
     },
   );
 

@@ -11,13 +11,13 @@ const readFileAsync = promisify(fs.readFile);
 /**
  * This custom action determines whether or not to rebuild the Snooty parse cache files.
  * It's determined based on the current release and previous release of the docs-worker-pool.
- * The value of the `SNOOTY_PARSER_VERSION` is compared between the two. The value in the Dockerfile.enhanced is used.
+ * The value of the `SNOOTY_PARSER_VERSION` is compared between the two. The value in the Dockerfile is used.
  * The following steps take place during the action:
  *
- * 1. We check the Dockerfile.enhanced's value for the SNOOTY_PARSER_VERSION build argument from the Dockerfile.enhanced associated with the given build.
+ * 1. We check the Dockerfile's value for the SNOOTY_PARSER_VERSION build argument from the Dockerfile associated with the given build.
  * It is assumed that the given build is a part of a release.
  *
- * 2. We also load the last release's Dockerfile.enhanced, and retrieve the SNOOTY_PARSER_VERSION value from there as well. We then compare the two values.
+ * 2. We also load the last release's Dockerfile, and retrieve the SNOOTY_PARSER_VERSION value from there as well. We then compare the two values.
  * If the two values differ, we continue with the process.
  *
  * 3. If they differ, we then deploy an updated version of the cache updater stack to use the latest version of the Snooty Parser that the Autobuilder is using in the release.
@@ -29,9 +29,7 @@ async function main(): Promise<void> {
   const WORKSPACE = process.env.WORKSPACE;
 
   const [dockerfileEnhanced, previousDockerfileEnhanced] = await Promise.all([
-    readFileAsync(`${WORKSPACE}/Dockerfile.enhanced`).then(result =>
-      result.toString(),
-    ),
+    readFileAsync(`${WORKSPACE}/Dockerfile`).then(result => result.toString()),
     getLastReleaseDockerfile(),
   ]);
 
