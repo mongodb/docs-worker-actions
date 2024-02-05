@@ -1,5 +1,5 @@
 name: 'docs-worker-actions'
-description: 'Build docs site html and save to artifact'
+description: 'Fetches latest build data for docs site'
 author: 'MongoDB'
 runs:
   using: node20
