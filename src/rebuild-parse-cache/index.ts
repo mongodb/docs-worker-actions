@@ -28,13 +28,13 @@ const readFileAsync = promisify(fs.readFile);
 async function main(): Promise<void> {
   const WORKSPACE = process.env.WORKSPACE;
 
-  const [dockerfileEnhanced, previousDockerfileEnhanced] = await Promise.all([
+  const [dockerfile, previousDockerfile] = await Promise.all([
     readFileAsync(`${WORKSPACE}/Dockerfile`).then(result => result.toString()),
     getLastReleaseDockerfile(),
   ]);
 
-  const currentParserVersion = getParserVersion(dockerfileEnhanced);
-  const previousParserVersion = getParserVersion(previousDockerfileEnhanced);
+  const currentParserVersion = getParserVersion(dockerfile);
+  const previousParserVersion = getParserVersion(previousDockerfile);
 
   // keeping this logging here to verify we are parsing the correct versions.
   console.log(`CURRENT RELEASE PARSER VERSION: ${currentParserVersion}`);
