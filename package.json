@@ -33,7 +33,8 @@
     "package:module": "ncc build",
     "package:comment-pr": "ncc build src/comment-pr/index.ts --license licenses.txt -o dist/comment-pr",
     "package:rebuild-parse-cache": "ncc build src/rebuild-parse-cache/index.ts --license licenses.txt -o dist/rebuild-parse-cache",
-    "package": "npm run package:comment-pr && npm run package:rebuild-parse-cache",
+    "package:build-artifact": "ncc build src/build-artifact/index.ts --license licenses.txt -o dist/build-artifact",
+    "package": "npm run package:comment-pr && npm run package:rebuild-parse-cache && npm run package:build-artifact",
     "package:watch": "npm run package -- --watch",
     "test": "(jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
     "all": "npm run format:write && npm run lint && npm run test && npm run package"
@@ -75,11 +76,13 @@
     "@aws-sdk/client-api-gateway": "^3.496.0",
     "@aws-sdk/client-ssm": "^3.496.0",
     "axios": "^1.6.5",
-    "mongodb": "^6.3.0"
+    "mongodb": "^6.3.0",
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
     "@types/node": "^20.8.10",
+    "@types/node-fetch": "^2.6.11",
     "@typescript-eslint/eslint-plugin": "^6.9.1",
     "@typescript-eslint/parser": "^6.6.0",
     "@vercel/ncc": "^0.38.0",
