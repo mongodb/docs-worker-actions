@@ -1,0 +1,8 @@
+name: Publish artifact to S3
+description: >
+  This action uploads a directory and its contents to specified AWS bucket.
+  It uses S3Client with credentials along with the input source directory stored in ENV variables to upload contents to designated bucket.
+author: 'MongoDB'
+runs:
+  using: node20
+  main: ../dist/publish-build/index.js
