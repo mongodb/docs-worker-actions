@@ -9,7 +9,7 @@ import {
 } from '@aws-sdk/client-s3';
 
 const REQUIRED_ENV_VARS = [
-  'AWS_KEY_ID',
+  'AWS_ACCESS_KEY_ID',
   'AWS_SECRET_ACCESS_KEY',
   'AWS_BUCKET',
   'PROJECT',
@@ -43,7 +43,7 @@ async function upload(
   directoryPath: string,
   files: string[],
 ): Promise<PutObjectCommandOutput[]> {
-  const accessKeyId = process.env['AWS_KEY_ID'] ?? '';
+  const accessKeyId = process.env['AWS_ACCESS_KEY_ID'] ?? '';
   const secretAccessKey = process.env['AWS_SECRET_ACCESS_KEY'] ?? '';
   const project = process.env['PROJECT'] ?? '';
   const commitHash = process.env['COMMIT_HASH'] ?? '';
