@@ -42,6 +42,7 @@ async function getFileNames(dir: string): Promise<string[]> {
 
 async function upload(
   sourcePath: string,
+  directoryPath: string,
   fileNames: string[],
 ): Promise<PutObjectCommandOutput[]> {
   const accessKeyId = process.env['AWS_ACCESS_KEY_ID'] ?? '';
@@ -61,7 +62,7 @@ async function upload(
   const uploads = fileNames.map(async fileName => {
     const key = path.normalize(
       `${destinationDir}/${project}/${commitHash}/${path.relative(
-        sourcePath,
+        path.normalize(`${sourcePath}/${directoryPath}`),
         fileName,
       )}`,
     );
@@ -82,7 +83,7 @@ async function main(): Promise<void> {
   const directoryPath = process.env['SOURCE_DIR'] ?? '';
   const ghWorkspace = process.env['GITHUB_WORKSPACE'] ?? '';
   const fileNames = await getFileNames(directoryPath);
-  await upload(ghWorkspace, fileNames);
+  await upload(ghWorkspace, directoryPath, fileNames);
 }
 
 main();

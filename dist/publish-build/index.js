@@ -34223,7 +34223,7 @@ async function getFileNames(dir) {
     }));
     return Array.prototype.concat(...files);
 }
-async function upload(sourcePath, fileNames) {
+async function upload(sourcePath, directoryPath, fileNames) {
     const accessKeyId = process.env['AWS_ACCESS_KEY_ID'] ?? '';
     const secretAccessKey = process.env['AWS_SECRET_ACCESS_KEY'] ?? '';
     const project = process.env['PROJECT'] ?? '';
@@ -34238,7 +34238,7 @@ async function upload(sourcePath, fileNames) {
     });
     const bucket = process.env['AWS_BUCKET'] ?? '';
     const uploads = fileNames.map(async (fileName) => {
-        const key = path.normalize(`${destinationDir}/${project}/${commitHash}/${path.relative(sourcePath, fileName)}`);
+        const key = path.normalize(`${destinationDir}/${project}/${commitHash}/${path.relative(path.normalize(`${sourcePath}/${directoryPath}`), fileName)}`);
         core.info(`check key ${key}`);
         const input = {
             Body: (0, fs_1.createReadStream)(fileName),
@@ -34255,7 +34255,7 @@ async function main() {
     const directoryPath = process.env['SOURCE_DIR'] ?? '';
     const ghWorkspace = process.env['GITHUB_WORKSPACE'] ?? '';
     const fileNames = await getFileNames(directoryPath);
-    await upload(ghWorkspace, fileNames);
+    await upload(ghWorkspace, directoryPath, fileNames);
 }
 main();
 
