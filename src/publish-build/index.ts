@@ -71,6 +71,7 @@ async function upload(
       Key: key,
       Bucket: bucket,
       ContentType: mime.getType(path.extname(fileName)) ?? '',
+      CacheControl: 'no-cache',
     };
     const command = new PutObjectCommand(input);
     return client.send(command);

@@ -34247,6 +34247,7 @@ async function upload(sourcePath, directoryPath, fileNames) {
             Key: key,
             Bucket: bucket,
             ContentType: mime_1.default.getType(path.extname(fileName)) ?? '',
+            CacheControl: 'no-cache',
         };
         const command = new client_s3_1.PutObjectCommand(input);
         return client.send(command);
