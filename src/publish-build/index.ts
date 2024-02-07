@@ -30,7 +30,6 @@ function validateEnvVars(): void {
 }
 
 async function getFileNames(dir: string): Promise<string[]> {
-  console.log('reading files in dir ', dir);
   const dirents = await fs.readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
     dirents.map(async dirent => {
