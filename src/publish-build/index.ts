@@ -29,6 +29,7 @@ function validateEnvVars(): void {
 }
 
 async function getFileNames(dir: string): Promise<string[]> {
+  console.log('reading files in dir ', dir);
   const dirents = await fs.readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
     dirents.map(async dirent => {
@@ -40,7 +41,7 @@ async function getFileNames(dir: string): Promise<string[]> {
 }
 
 async function upload(
-  directoryPath: string,
+  sourcePath: string,
   fileNames: string[],
 ): Promise<PutObjectCommandOutput[]> {
   const accessKeyId = process.env['AWS_ACCESS_KEY_ID'] ?? '';
@@ -58,7 +59,12 @@ async function upload(
   const bucket = process.env['AWS_BUCKET'] ?? '';
 
   const uploads = fileNames.map(async fileName => {
-    const key = `${destinationDir}/${project}/${commitHash}/${fileName}`;
+    const key = path.normalize(
+      `${destinationDir}/${project}/${commitHash}/${path.relative(
+        sourcePath,
+        fileName,
+      )}`,
+    );
     core.info(`check key ${key}`);
     const input: PutObjectCommandInput = {
       Body: createReadStream(fileName),
@@ -74,8 +80,9 @@ async function upload(
 async function main(): Promise<void> {
   validateEnvVars();
   const directoryPath = process.env['SOURCE_DIR'] ?? '';
+  const ghWorkspace = process.env['GITHUB_WORKSPACE'] ?? '';
   const fileNames = await getFileNames(directoryPath);
-  await upload(directoryPath, fileNames);
+  await upload(ghWorkspace, fileNames);
 }
 
 main();
