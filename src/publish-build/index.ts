@@ -1,12 +1,13 @@
 import * as core from '@actions/core';
-import { promises as fs, createReadStream } from 'fs';
-import * as path from 'path';
 import {
   S3Client,
   PutObjectCommand,
   PutObjectCommandOutput,
   PutObjectCommandInput,
 } from '@aws-sdk/client-s3';
+import { promises as fs, createReadStream } from 'fs';
+import mime from 'mime';
+import * as path from 'path';
 
 const REQUIRED_ENV_VARS = [
   'AWS_ACCESS_KEY_ID',
@@ -71,6 +72,7 @@ async function upload(
       Body: createReadStream(fileName),
       Key: key,
       Bucket: bucket,
+      ContentType: mime.getType(path.extname(fileName)) ?? '',
     };
     const command = new PutObjectCommand(input);
     return client.send(command);

@@ -78,6 +78,7 @@
     "@aws-sdk/client-s3": "^3.507.0",
     "@aws-sdk/client-ssm": "^3.496.0",
     "axios": "^1.6.5",
+    "mime": "^4.0.1",
     "mongodb": "^6.3.0",
     "node-fetch": "^2.7.0"
   },
