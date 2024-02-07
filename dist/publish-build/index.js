@@ -34214,15 +34214,15 @@ function validateEnvVars() {
         }
     }
 }
-async function getFiles(dir) {
+async function getFileNames(dir) {
     const dirents = await fs_1.promises.readdir(dir, { withFileTypes: true });
     const files = await Promise.all(dirents.map(async (dirent) => {
         const res = path.resolve(dir, dirent.name);
-        return dirent.isDirectory() ? getFiles(res) : res;
+        return dirent.isDirectory() ? getFileNames(res) : res;
     }));
     return Array.prototype.concat(...files);
 }
-async function upload(directoryPath, files) {
+async function upload(directoryPath, fileNames) {
     const accessKeyId = process.env['AWS_ACCESS_KEY_ID'] ?? '';
     const secretAccessKey = process.env['AWS_SECRET_ACCESS_KEY'] ?? '';
     const project = process.env['PROJECT'] ?? '';
@@ -34236,11 +34236,11 @@ async function upload(directoryPath, files) {
         },
     });
     const bucket = process.env['AWS_BUCKET'] ?? '';
-    const uploads = files.map(async (file) => {
-        const key = `${destinationDir}/${file.substring(directoryPath.length + 1)}/${project}/${commitHash}`;
+    const uploads = fileNames.map(async (fileName) => {
+        const key = `${destinationDir}/${project}/${commitHash}/${fileName}`;
         core.info(`check key ${key}`);
         const input = {
-            Body: (0, fs_1.createReadStream)(file),
+            Body: (0, fs_1.createReadStream)(fileName),
             Key: key,
             Bucket: bucket,
         };
@@ -34252,8 +34252,8 @@ async function upload(directoryPath, files) {
 async function main() {
     validateEnvVars();
     const directoryPath = process.env['SOURCE_DIR'] ?? '';
-    const files = await getFiles(directoryPath);
-    await upload(directoryPath, files);
+    const fileNames = await getFileNames(directoryPath);
+    await upload(directoryPath, fileNames);
 }
 main();
 

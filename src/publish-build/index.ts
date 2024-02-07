@@ -28,12 +28,12 @@ function validateEnvVars(): void {
   }
 }
 
-async function getFiles(dir: string): Promise<string[]> {
+async function getFileNames(dir: string): Promise<string[]> {
   const dirents = await fs.readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
     dirents.map(async dirent => {
       const res = path.resolve(dir, dirent.name);
-      return dirent.isDirectory() ? getFiles(res) : res;
+      return dirent.isDirectory() ? getFileNames(res) : res;
     }),
   );
   return Array.prototype.concat(...files);
@@ -41,7 +41,7 @@ async function getFiles(dir: string): Promise<string[]> {
 
 async function upload(
   directoryPath: string,
-  files: string[],
+  fileNames: string[],
 ): Promise<PutObjectCommandOutput[]> {
   const accessKeyId = process.env['AWS_ACCESS_KEY_ID'] ?? '';
   const secretAccessKey = process.env['AWS_SECRET_ACCESS_KEY'] ?? '';
@@ -57,13 +57,11 @@ async function upload(
   });
   const bucket = process.env['AWS_BUCKET'] ?? '';
 
-  const uploads = files.map(async file => {
-    const key = `${destinationDir}/${file.substring(
-      directoryPath.length + 1,
-    )}/${project}/${commitHash}`;
+  const uploads = fileNames.map(async fileName => {
+    const key = `${destinationDir}/${project}/${commitHash}/${fileName}`;
     core.info(`check key ${key}`);
     const input: PutObjectCommandInput = {
-      Body: createReadStream(file),
+      Body: createReadStream(fileName),
       Key: key,
       Bucket: bucket,
     };
@@ -76,8 +74,8 @@ async function upload(
 async function main(): Promise<void> {
   validateEnvVars();
   const directoryPath = process.env['SOURCE_DIR'] ?? '';
-  const files = await getFiles(directoryPath);
-  await upload(directoryPath, files);
+  const fileNames = await getFileNames(directoryPath);
+  await upload(directoryPath, fileNames);
 }
 
 main();
