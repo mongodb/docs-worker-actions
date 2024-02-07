@@ -61,6 +61,7 @@ async function upload(
     const key = `${destinationDir}/${file.substring(
       directoryPath.length + 1,
     )}/${project}/${commitHash}`;
+    core.info(`check key ${key}`);
     const input: PutObjectCommandInput = {
       Body: createReadStream(file),
       Key: key,

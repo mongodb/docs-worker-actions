@@ -34238,6 +34238,7 @@ async function upload(directoryPath, files) {
     const bucket = process.env['AWS_BUCKET'] ?? '';
     const uploads = files.map(async (file) => {
         const key = `${destinationDir}/${file.substring(directoryPath.length + 1)}/${project}/${commitHash}`;
+        core.info(`check key ${key}`);
         const input = {
             Body: (0, fs_1.createReadStream)(file),
             Key: key,
