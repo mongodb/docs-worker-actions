@@ -67,7 +67,6 @@ async function upload(
         fileName,
       )}`,
     );
-    core.info(`check key ${key}`);
     const input: PutObjectCommandInput = {
       Body: createReadStream(fileName),
       Key: key,
