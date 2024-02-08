@@ -34201,22 +34201,24 @@ const fs_1 = __nccwpck_require__(7147);
 const mime_1 = __importDefault(__nccwpck_require__(1402));
 const path = __importStar(__nccwpck_require__(1017));
 const REQUIRED_ENV_VARS = [
-    'AWS_ACCESS_KEY_ID',
-    'AWS_SECRET_ACCESS_KEY',
     'AWS_BUCKET',
     'PROJECT',
     'SOURCE_DIR',
     'DESTINATION_DIR',
     'COMMIT_HASH',
+    'GITHUB_WORKSPACE',
 ];
-function validateEnvVars() {
+function getEnvVars() {
+    const res = {};
     for (const requiredVar of REQUIRED_ENV_VARS) {
         if (!process.env[requiredVar]) {
             const errMsg = `Required env variable missing: ${requiredVar}`;
             core.error(errMsg);
             throw new Error(errMsg);
         }
+        res[requiredVar] = process.env[requiredVar] ?? '';
     }
+    return res;
 }
 async function getFileNames(dir) {
     const dirents = await fs_1.promises.readdir(dir, { withFileTypes: true });
@@ -34226,26 +34228,14 @@ async function getFileNames(dir) {
     }));
     return Array.prototype.concat(...files);
 }
-async function upload(sourcePath, directoryPath, fileNames) {
-    const accessKeyId = process.env['AWS_ACCESS_KEY_ID'] ?? '';
-    const secretAccessKey = process.env['AWS_SECRET_ACCESS_KEY'] ?? '';
-    const project = process.env['PROJECT'] ?? '';
-    const commitHash = process.env['COMMIT_HASH'] ?? '';
-    const destinationDir = process.env['DESTINATION_DIR'] ?? '';
-    const client = new client_s3_1.S3Client({
-        region: 'us-east-2',
-        credentials: {
-            accessKeyId,
-            secretAccessKey,
-        },
-    });
-    const bucket = process.env['AWS_BUCKET'] ?? '';
+async function upload({ AWS_BUCKET, PROJECT, SOURCE_DIR, DESTINATION_DIR, COMMIT_HASH, GITHUB_WORKSPACE, }, fileNames) {
+    const client = new client_s3_1.S3Client();
     const uploads = fileNames.map(async (fileName) => {
-        const key = path.normalize(`${destinationDir}/${project}/${commitHash}/${path.relative(path.normalize(`${sourcePath}/${directoryPath}`), fileName)}`);
+        const key = path.normalize(`${DESTINATION_DIR}/${PROJECT}/${COMMIT_HASH}/${path.relative(path.normalize(`${GITHUB_WORKSPACE}/${SOURCE_DIR}`), fileName)}`);
         const input = {
             Body: (0, fs_1.createReadStream)(fileName),
             Key: key,
-            Bucket: bucket,
+            Bucket: AWS_BUCKET,
             ContentType: mime_1.default.getType(path.extname(fileName)) ?? '',
             CacheControl: 'no-cache',
         };
@@ -34255,11 +34245,14 @@ async function upload(sourcePath, directoryPath, fileNames) {
     return Promise.all(uploads);
 }
 async function main() {
-    validateEnvVars();
-    const directoryPath = process.env['SOURCE_DIR'] ?? '';
-    const ghWorkspace = process.env['GITHUB_WORKSPACE'] ?? '';
-    const fileNames = await getFileNames(directoryPath);
-    await upload(ghWorkspace, directoryPath, fileNames);
+    const envVars = getEnvVars();
+    const fileNames = await getFileNames(envVars['SOURCE_DIR']);
+    try {
+        await upload(envVars, fileNames);
+    }
+    catch (e) {
+        core.error(`Error while uploading to S3: ${e}`);
+    }
 }
 main();
 
@@ -34557,7 +34550,7 @@ module.exports = JSON.parse('{"name":"@aws-sdk/client-sts","description":"AWS SD
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"@aws-sdk/client-s3","description":"AWS SDK for JavaScript S3 Client for Node.js, Browser and React Native","version":"3.507.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-s3","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo s3","test":"yarn test:unit","test:e2e":"yarn test:e2e:node && yarn test:e2e:browser","test:e2e:browser":"ts-mocha test/**/*.browser.ispec.ts && karma start karma.conf.js","test:e2e:node":"jest --c jest.config.e2e.js","test:unit":"ts-mocha test/unit/**/*.spec.ts"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha1-browser":"3.0.0","@aws-crypto/sha256-browser":"3.0.0","@aws-crypto/sha256-js":"3.0.0","@aws-sdk/client-sts":"3.507.0","@aws-sdk/core":"3.496.0","@aws-sdk/credential-provider-node":"3.507.0","@aws-sdk/middleware-bucket-endpoint":"3.502.0","@aws-sdk/middleware-expect-continue":"3.502.0","@aws-sdk/middleware-flexible-checksums":"3.502.0","@aws-sdk/middleware-host-header":"3.502.0","@aws-sdk/middleware-location-constraint":"3.502.0","@aws-sdk/middleware-logger":"3.502.0","@aws-sdk/middleware-recursion-detection":"3.502.0","@aws-sdk/middleware-sdk-s3":"3.502.0","@aws-sdk/middleware-signing":"3.502.0","@aws-sdk/middleware-ssec":"3.502.0","@aws-sdk/middleware-user-agent":"3.502.0","@aws-sdk/region-config-resolver":"3.502.0","@aws-sdk/signature-v4-multi-region":"3.502.0","@aws-sdk/types":"3.502.0","@aws-sdk/util-endpoints":"3.502.0","@aws-sdk/util-user-agent-browser":"3.502.0","@aws-sdk/util-user-agent-node":"3.502.0","@aws-sdk/xml-builder":"3.496.0","@smithy/config-resolver":"^2.1.1","@smithy/core":"^1.3.1","@smithy/eventstream-serde-browser":"^2.1.1","@smithy/eventstream-serde-config-resolver":"^2.1.1","@smithy/eventstream-serde-node":"^2.1.1","@smithy/fetch-http-handler":"^2.4.1","@smithy/hash-blob-browser":"^2.1.1","@smithy/hash-node":"^2.1.1","@smithy/hash-stream-node":"^2.1.1","@smithy/invalid-dependency":"^2.1.1","@smithy/md5-js":"^2.1.1","@smithy/middleware-content-length":"^2.1.1","@smithy/middleware-endpoint":"^2.4.1","@smithy/middleware-retry":"^2.1.1","@smithy/middleware-serde":"^2.1.1","@smithy/middleware-stack":"^2.1.1","@smithy/node-config-provider":"^2.2.1","@smithy/node-http-handler":"^2.3.1","@smithy/protocol-http":"^3.1.1","@smithy/smithy-client":"^2.3.1","@smithy/types":"^2.9.1","@smithy/url-parser":"^2.1.1","@smithy/util-base64":"^2.1.1","@smithy/util-body-length-browser":"^2.1.1","@smithy/util-body-length-node":"^2.2.1","@smithy/util-defaults-mode-browser":"^2.1.1","@smithy/util-defaults-mode-node":"^2.1.1","@smithy/util-endpoints":"^1.1.1","@smithy/util-retry":"^2.1.1","@smithy/util-stream":"^2.1.1","@smithy/util-utf8":"^2.1.1","@smithy/util-waiter":"^2.1.1","fast-xml-parser":"4.2.5","tslib":"^2.5.0"},"devDependencies":{"@aws-sdk/signature-v4-crt":"3.502.0","@smithy/service-client-documentation-generator":"^2.1.1","@tsconfig/node14":"1.0.3","@types/chai":"^4.2.11","@types/mocha":"^8.0.4","@types/node":"^14.14.31","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~4.9.5"},"engines":{"node":">=14.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-s3","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-s3"}}');
+module.exports = JSON.parse('{"name":"@aws-sdk/client-s3","description":"AWS SDK for JavaScript S3 Client for Node.js, Browser and React Native","version":"3.509.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-s3","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo s3","test":"yarn test:unit","test:e2e":"yarn test:e2e:node && yarn test:e2e:browser","test:e2e:browser":"ts-mocha test/**/*.browser.ispec.ts && karma start karma.conf.js","test:e2e:node":"jest --c jest.config.e2e.js","test:unit":"ts-mocha test/unit/**/*.spec.ts"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha1-browser":"3.0.0","@aws-crypto/sha256-browser":"3.0.0","@aws-crypto/sha256-js":"3.0.0","@aws-sdk/client-sts":"3.507.0","@aws-sdk/core":"3.496.0","@aws-sdk/credential-provider-node":"3.509.0","@aws-sdk/middleware-bucket-endpoint":"3.502.0","@aws-sdk/middleware-expect-continue":"3.502.0","@aws-sdk/middleware-flexible-checksums":"3.502.0","@aws-sdk/middleware-host-header":"3.502.0","@aws-sdk/middleware-location-constraint":"3.502.0","@aws-sdk/middleware-logger":"3.502.0","@aws-sdk/middleware-recursion-detection":"3.502.0","@aws-sdk/middleware-sdk-s3":"3.502.0","@aws-sdk/middleware-signing":"3.502.0","@aws-sdk/middleware-ssec":"3.502.0","@aws-sdk/middleware-user-agent":"3.502.0","@aws-sdk/region-config-resolver":"3.502.0","@aws-sdk/signature-v4-multi-region":"3.502.0","@aws-sdk/types":"3.502.0","@aws-sdk/util-endpoints":"3.502.0","@aws-sdk/util-user-agent-browser":"3.502.0","@aws-sdk/util-user-agent-node":"3.502.0","@aws-sdk/xml-builder":"3.496.0","@smithy/config-resolver":"^2.1.1","@smithy/core":"^1.3.1","@smithy/eventstream-serde-browser":"^2.1.1","@smithy/eventstream-serde-config-resolver":"^2.1.1","@smithy/eventstream-serde-node":"^2.1.1","@smithy/fetch-http-handler":"^2.4.1","@smithy/hash-blob-browser":"^2.1.1","@smithy/hash-node":"^2.1.1","@smithy/hash-stream-node":"^2.1.1","@smithy/invalid-dependency":"^2.1.1","@smithy/md5-js":"^2.1.1","@smithy/middleware-content-length":"^2.1.1","@smithy/middleware-endpoint":"^2.4.1","@smithy/middleware-retry":"^2.1.1","@smithy/middleware-serde":"^2.1.1","@smithy/middleware-stack":"^2.1.1","@smithy/node-config-provider":"^2.2.1","@smithy/node-http-handler":"^2.3.1","@smithy/protocol-http":"^3.1.1","@smithy/smithy-client":"^2.3.1","@smithy/types":"^2.9.1","@smithy/url-parser":"^2.1.1","@smithy/util-base64":"^2.1.1","@smithy/util-body-length-browser":"^2.1.1","@smithy/util-body-length-node":"^2.2.1","@smithy/util-defaults-mode-browser":"^2.1.1","@smithy/util-defaults-mode-node":"^2.1.1","@smithy/util-endpoints":"^1.1.1","@smithy/util-retry":"^2.1.1","@smithy/util-stream":"^2.1.1","@smithy/util-utf8":"^2.1.1","@smithy/util-waiter":"^2.1.1","fast-xml-parser":"4.2.5","tslib":"^2.5.0"},"devDependencies":{"@aws-sdk/signature-v4-crt":"3.502.0","@smithy/service-client-documentation-generator":"^2.1.1","@tsconfig/node14":"1.0.3","@types/chai":"^4.2.11","@types/mocha":"^8.0.4","@types/node":"^14.14.31","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~4.9.5"},"engines":{"node":">=14.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-s3","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-s3"}}');
 
 /***/ })
 

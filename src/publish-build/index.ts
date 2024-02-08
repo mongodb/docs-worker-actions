@@ -10,23 +10,34 @@ import mime from 'mime';
 import * as path from 'path';
 
 const REQUIRED_ENV_VARS = [
-  'AWS_ACCESS_KEY_ID',
-  'AWS_SECRET_ACCESS_KEY',
   'AWS_BUCKET',
   'PROJECT',
   'SOURCE_DIR',
   'DESTINATION_DIR',
   'COMMIT_HASH',
+  'GITHUB_WORKSPACE',
 ];
 
-function validateEnvVars(): void {
+interface envParams {
+  AWS_BUCKET: string;
+  PROJECT: string;
+  SOURCE_DIR: string;
+  DESTINATION_DIR: string;
+  COMMIT_HASH: string;
+  GITHUB_WORKSPACE: string;
+}
+
+function getEnvVars(): envParams {
+  const res: { [key: string]: string } = {};
   for (const requiredVar of REQUIRED_ENV_VARS) {
     if (!process.env[requiredVar]) {
       const errMsg = `Required env variable missing: ${requiredVar}`;
       core.error(errMsg);
       throw new Error(errMsg);
     }
+    res[requiredVar] = process.env[requiredVar] ?? '';
   }
+  return res as unknown as envParams;
 }
 
 async function getFileNames(dir: string): Promise<string[]> {
@@ -41,35 +52,29 @@ async function getFileNames(dir: string): Promise<string[]> {
 }
 
 async function upload(
-  sourcePath: string,
-  directoryPath: string,
+  {
+    AWS_BUCKET,
+    PROJECT,
+    SOURCE_DIR,
+    DESTINATION_DIR,
+    COMMIT_HASH,
+    GITHUB_WORKSPACE,
+  }: envParams,
   fileNames: string[],
 ): Promise<PutObjectCommandOutput[]> {
-  const accessKeyId = process.env['AWS_ACCESS_KEY_ID'] ?? '';
-  const secretAccessKey = process.env['AWS_SECRET_ACCESS_KEY'] ?? '';
-  const project = process.env['PROJECT'] ?? '';
-  const commitHash = process.env['COMMIT_HASH'] ?? '';
-  const destinationDir = process.env['DESTINATION_DIR'] ?? '';
-  const client = new S3Client({
-    region: 'us-east-2',
-    credentials: {
-      accessKeyId,
-      secretAccessKey,
-    },
-  });
-  const bucket = process.env['AWS_BUCKET'] ?? '';
+  const client = new S3Client();
 
   const uploads = fileNames.map(async fileName => {
     const key = path.normalize(
-      `${destinationDir}/${project}/${commitHash}/${path.relative(
-        path.normalize(`${sourcePath}/${directoryPath}`),
+      `${DESTINATION_DIR}/${PROJECT}/${COMMIT_HASH}/${path.relative(
+        path.normalize(`${GITHUB_WORKSPACE}/${SOURCE_DIR}`),
         fileName,
       )}`,
     );
     const input: PutObjectCommandInput = {
       Body: createReadStream(fileName),
       Key: key,
-      Bucket: bucket,
+      Bucket: AWS_BUCKET,
       ContentType: mime.getType(path.extname(fileName)) ?? '',
       CacheControl: 'no-cache',
     };
@@ -80,11 +85,13 @@ async function upload(
 }
 
 async function main(): Promise<void> {
-  validateEnvVars();
-  const directoryPath = process.env['SOURCE_DIR'] ?? '';
-  const ghWorkspace = process.env['GITHUB_WORKSPACE'] ?? '';
-  const fileNames = await getFileNames(directoryPath);
-  await upload(ghWorkspace, directoryPath, fileNames);
+  const envVars = getEnvVars();
+  const fileNames = await getFileNames(envVars['SOURCE_DIR']);
+  try {
+    await upload(envVars, fileNames);
+  } catch (e) {
+    core.error(`Error while uploading to S3: ${e}`);
+  }
 }
 
 main();
