@@ -16,28 +16,24 @@ const REQUIRED_ENV_VARS = [
   'DESTINATION_DIR',
   'COMMIT_HASH',
   'GITHUB_WORKSPACE',
-];
+] as const;
 
-interface envParams {
-  AWS_BUCKET: string;
-  PROJECT: string;
-  SOURCE_DIR: string;
-  DESTINATION_DIR: string;
-  COMMIT_HASH: string;
-  GITHUB_WORKSPACE: string;
-}
+type RequiredVar = (typeof REQUIRED_ENV_VARS)[number];
 
-function getEnvVars(): envParams {
-  const res: { [key: string]: string } = {};
+type EnvParams = Record<RequiredVar, string>;
+
+function getEnvVars(): EnvParams {
+  const res: Partial<EnvParams> = {};
   for (const requiredVar of REQUIRED_ENV_VARS) {
-    if (!process.env[requiredVar]) {
+    const envVar = process.env[requiredVar];
+    if (!envVar) {
       const errMsg = `Required env variable missing: ${requiredVar}`;
       core.error(errMsg);
       throw new Error(errMsg);
     }
-    res[requiredVar] = process.env[requiredVar] ?? '';
+    res[requiredVar] = envVar;
   }
-  return res as unknown as envParams;
+  return res as EnvParams;
 }
 
 async function getFileNames(dir: string): Promise<string[]> {
@@ -59,7 +55,7 @@ async function upload(
     DESTINATION_DIR,
     COMMIT_HASH,
     GITHUB_WORKSPACE,
-  }: envParams,
+  }: EnvParams,
   fileNames: string[],
 ): Promise<PutObjectCommandOutput[]> {
   const client = new S3Client();

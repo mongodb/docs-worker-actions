@@ -34211,12 +34211,13 @@ const REQUIRED_ENV_VARS = [
 function getEnvVars() {
     const res = {};
     for (const requiredVar of REQUIRED_ENV_VARS) {
-        if (!process.env[requiredVar]) {
+        const envVar = process.env[requiredVar];
+        if (!envVar) {
             const errMsg = `Required env variable missing: ${requiredVar}`;
             core.error(errMsg);
             throw new Error(errMsg);
         }
-        res[requiredVar] = process.env[requiredVar] ?? '';
+        res[requiredVar] = envVar;
     }
     return res;
 }
