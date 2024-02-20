@@ -9676,6 +9676,7 @@ async function run() {
         throw new Error('Failed. GITHUB_TOKEN is not set.');
     }
     const octokit = github.getOctokit(githubToken);
+    const stage = core.getInput('stage') ?? 'stg';
     const prNumber = github.context.payload.pull_request?.number;
     if (!prNumber) {
         core.error('ERROR! PR number is undefined');
@@ -9684,7 +9685,7 @@ async function run() {
     try {
         const outputsFile = (await readFileAsync('cdk-infra/outputs.json')).toString();
         const outputs = JSON.parse(outputsFile);
-        const webhook = Object.values(outputs[`auto-builder-stack-enhancedApp-stg-${process.env.GITHUB_HEAD_REF}-webhooks`])[0];
+        const webhook = Object.values(outputs[`auto-builder-stack-enhancedApp-${stage}-${process.env.GITHUB_HEAD_REF}-webhooks`])[0];
         await octokit.rest.issues.createComment({
             issue_number: prNumber,
             body: `Your feature branch infrastructure has been deployed! \n\n Your webhook URL is: ${webhook}webhook/githubEndpoint/trigger/build\n\n For more information on how to use this endpoint, follow these [instructions](https://wiki.corp.mongodb.com/x/7FzoDg).`,
