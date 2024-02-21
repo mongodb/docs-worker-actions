@@ -9676,7 +9676,8 @@ async function run() {
         throw new Error('Failed. GITHUB_TOKEN is not set.');
     }
     const octokit = github.getOctokit(githubToken);
-    const stage = core.getInput('stage') ?? 'stg';
+    const stage = process.env.STAGE ?? 'stg';
+    console.log(stage);
     const prNumber = github.context.payload.pull_request?.number;
     if (!prNumber) {
         core.error('ERROR! PR number is undefined');
