@@ -39,8 +39,12 @@ async function main(): Promise<void> {
   // keeping this logging here to verify we are parsing the correct versions.
   console.log(`CURRENT RELEASE PARSER VERSION: ${currentParserVersion}`);
   console.log(`PREVIOUS RELEASE PARSER VERSION: ${previousParserVersion}`);
+  const shouldForceRun = process.env.FORCE_RUN === 'true';
+  if (currentParserVersion === previousParserVersion && !shouldForceRun) return;
 
-  if (currentParserVersion === previousParserVersion) return;
+  console.log(
+    `Updating cache ${shouldForceRun ? 'via force run' : 'via version update'}`,
+  );
 
   await Promise.all([
     exec.exec('npm', ['ci'], { cwd: `${WORKSPACE}` }),

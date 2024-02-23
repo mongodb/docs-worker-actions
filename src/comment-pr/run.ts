@@ -16,6 +16,7 @@ export async function run(): Promise<void> {
 
   const octokit = github.getOctokit(githubToken);
 
+  const stage = process.env.STAGE ?? 'stg';
   const prNumber = github.context.payload.pull_request?.number;
 
   if (!prNumber) {
@@ -30,7 +31,7 @@ export async function run(): Promise<void> {
 
     const webhook = Object.values(
       outputs[
-        `auto-builder-stack-enhancedApp-stg-${process.env.GITHUB_HEAD_REF}-webhooks`
+        `auto-builder-stack-enhancedApp-${stage}-${process.env.GITHUB_HEAD_REF}-webhooks`
       ],
     )[0];
 
