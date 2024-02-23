@@ -40,7 +40,11 @@ async function main(): Promise<void> {
   console.log(`CURRENT RELEASE PARSER VERSION: ${currentParserVersion}`);
   console.log(`PREVIOUS RELEASE PARSER VERSION: ${previousParserVersion}`);
 
-  if (currentParserVersion === previousParserVersion) return;
+  if (
+    currentParserVersion === previousParserVersion ||
+    process.env.FORCE_RUN !== 'true'
+  )
+    return;
 
   await Promise.all([
     exec.exec('npm', ['ci'], { cwd: `${WORKSPACE}` }),
