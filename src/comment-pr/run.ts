@@ -17,7 +17,6 @@ export async function run(): Promise<void> {
   const octokit = github.getOctokit(githubToken);
 
   const stage = process.env.STAGE ?? 'stg';
-  console.log(stage);
   const prNumber = github.context.payload.pull_request?.number;
 
   if (!prNumber) {
