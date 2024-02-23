@@ -41,7 +41,7 @@ async function main(): Promise<void> {
   console.log(`PREVIOUS RELEASE PARSER VERSION: ${previousParserVersion}`);
 
   if (
-    currentParserVersion === previousParserVersion ||
+    currentParserVersion === previousParserVersion &&
     process.env.FORCE_RUN !== 'true'
   )
     return;
