@@ -1,12 +1,12 @@
+import ApiClient from '@lhci/utils/src/api-client.js';
+import { ReportGenerator } from 'lighthouse/report/generator/report-generator.js';
+import type { Project, Build, Run } from '@lhci/types/server.d.ts';
+import type { LHResult } from '@lhci/types/lhr/lhr.d.ts';
+
 /**
  * Lighhouse Server API tool
  *
  */
-import ApiClient from '@lhci/utils/src/api-client.js';
-import { ReportGenerator } from 'lighthouse/report/generator/report-generator.js';
-import { Project, Build, Run } from '@lhci/types/server.d.ts';
-import { LHResult } from '@lhci/types/lhr/lhr.d.ts';
-
 export class LHServer {
   api: null | ApiClient = null;
   project: null | Project = null;
@@ -84,12 +84,12 @@ export class LHServer {
     return build;
   }
 
-  async createRun(build: Build, lhr: LHResult): Promise<Run> {
+  async createRun(build: Build, lhr: LHResult, url: string): Promise<Run> {
     const run = await (this.api as ApiClient).createRun({
       projectId: this.project.id,
       buildId: build.id,
       representative: false,
-      url: lhr.url,
+      url,
       lhr: ReportGenerator.generateReport(lhr, 'json'),
     });
     console.log(`Saving run for ${run.url} (${run.id})`);
