@@ -1,0 +1,7 @@
+name: Run Lighthouse report and upload to docs-lighthouse-server
+description: >
+  This action runs 3 Lighthouse reports on specified staging build, combines their median score, and uploads to the docs-lighthouse-server
+author: 'MongoDB'
+runs:
+  using: node20
+  main: ../dist/run-lighthouse/index.js
