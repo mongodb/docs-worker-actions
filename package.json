@@ -30,6 +30,7 @@
     "format:write": "prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
     "lint": "npx eslint . -c ./.eslintrc.yml",
+    "lint:fix": "npx eslint --fix . -c ./.eslintrc.yml",
     "package:module": "ncc build",
     "package:comment-pr": "ncc build src/comment-pr/index.ts --license licenses.txt -o dist/comment-pr",
     "package:publish-build": "ncc build src/publish-build/index.ts --license licenses.txt -o dist/publish-build",
@@ -80,7 +81,13 @@
     "axios": "^1.6.5",
     "mime": "^4.0.1",
     "mongodb": "^6.3.0",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "@lhci/cli": "^0.13.0",
+    "@lhci/server": "^0.13.0",
+    "arg": "^5.0.2",
+    "chrome-launcher": "^1.1.0",
+    "dotenv": "^16.0.3",
+    "lighthouse": "^11.6.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
