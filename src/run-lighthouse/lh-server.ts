@@ -12,10 +12,10 @@ export class LHServer {
   project: null | LHProject = null;
 
   constructor() {
-    const token = process.env.BUILD_TOKEN as string;
-    const adminToken = process.env.ADMIN_TOKEN as string;
+    const token = process.env.LIGHTHOUSE_BUILD_TOKEN as string;
+    const adminToken = process.env.LIGHTHOUSE_ADMIN_TOKEN as string;
     this.api = new ApiClient({
-      rootURL: process.env.ROOT_URL || 'http://localhost:9001',
+      rootURL: process.env.LIGHTHOUSE_SERVER_URL as string,
     }) as LHApiClient;
     this.api.setBuildToken(token);
     this.api.setAdminToken(adminToken);
@@ -23,7 +23,7 @@ export class LHServer {
   }
 
   async setProject(): Promise<void> {
-    const token = process.env.BUILD_TOKEN as string;
+    const token = process.env.LIGHTHOUSE_BUILD_TOKEN as string;
     this.project = await (this.api as LHApiClient).findProjectByToken(token);
     if (!this.project) {
       throw new Error('Could not find active project with provided token');

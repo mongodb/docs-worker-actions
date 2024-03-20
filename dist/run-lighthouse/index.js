@@ -7610,17 +7610,17 @@ class LHServer {
     api = null;
     project = null;
     constructor() {
-        const token = process.env.BUILD_TOKEN;
-        const adminToken = process.env.ADMIN_TOKEN;
+        const token = process.env.LIGHTHOUSE_BUILD_TOKEN;
+        const adminToken = process.env.LIGHTHOUSE_ADMIN_TOKEN;
         this.api = new api_client_1.default({
-            rootURL: process.env.ROOT_URL || 'http://localhost:9001',
+            rootURL: process.env.LIGHTHOUSE_SERVER_URL,
         });
         this.api.setBuildToken(token);
         this.api.setAdminToken(adminToken);
         return this;
     }
     async setProject() {
-        const token = process.env.BUILD_TOKEN;
+        const token = process.env.LIGHTHOUSE_BUILD_TOKEN;
         this.project = await this.api.findProjectByToken(token);
         if (!this.project) {
             throw new Error('Could not find active project with provided token');
