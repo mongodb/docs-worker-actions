@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import * as chromeLauncher from 'chrome-launcher';
 import lighthouse from 'lighthouse/core/index.cjs';
-import { computeMedianRun } from 'lighthouse/core/lib/median-run.js';
+import { computeMedianRun } from 'lighthouse/core/lib/median-run';
 import type { Flags } from 'lighthouse';
 import {
   getCurrentHash,
@@ -13,9 +13,9 @@ import {
   getAvatarUrl,
   getAncestorHashForBase,
   getAncestorHashForBranch,
-} from '@lhci/utils/src/build-context.js';
-import type { Build } from '@lhci/types/server.d.ts';
-import { LHServer } from './lh-server.js';
+} from '@lhci/utils/src/build-context';
+import { LHServer } from './lh-server';
+import { LHBuild } from './types/types';
 
 async function main(): Promise<void> {
   const url = process.env.STAGING_URL;
@@ -40,7 +40,7 @@ async function main(): Promise<void> {
   await server.setProject();
 
   // Get build context - Snooty branch and commit data
-  const baseBranch = server.project.baseBranch || 'main';
+  const baseBranch = server.project?.baseBranch || 'main';
   const hash = getCurrentHash();
   const branch = getCurrentBranch();
   const ancestorHash =
@@ -48,7 +48,7 @@ async function main(): Promise<void> {
       ? getAncestorHashForBase()
       : getAncestorHashForBranch('HEAD', baseBranch);
 
-  const buildInfo: Build = {
+  const buildInfo: Omit<LHBuild, 'projectId' | 'id'> = {
     lifecycle: 'unsealed',
     hash: hash + Date.now(),
     branch,
@@ -66,7 +66,7 @@ async function main(): Promise<void> {
   // Upload run to build
   await server.createRun(build, medianLHR, url);
   await server.sealBuild(build);
-  await server.api.close();
+  // await server.api.close();
 }
 
 main();
