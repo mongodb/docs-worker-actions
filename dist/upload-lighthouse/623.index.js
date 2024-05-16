@@ -1,6 +1,6 @@
-exports.id = 623;
-exports.ids = [623];
-exports.modules = {
+export const id = 623;
+export const ids = [623];
+export const modules = {
 
 /***/ 36141:
 /***/ ((module) => {
@@ -52,4 +52,3 @@ module.exports = webpackEmptyContext;
 /***/ })
 
 };
-;

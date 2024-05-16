@@ -1,6 +1,6 @@
-exports.id = 783;
-exports.ids = [783];
-exports.modules = {
+export const id = 783;
+export const ids = [783];
+export const modules = {
 
 /***/ 90785:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
@@ -6500,7 +6500,6 @@ exports.SDK_NAME = 'sentry.javascript.node';
 /***/ 11668:
 /***/ ((__unused_webpack_module, exports) => {
 
-"use strict";
 /*!
  * cookie
  * Copyright(c) 2012-2014 Roman Shtylman
@@ -10643,7 +10642,6 @@ var __createBinding;
 /***/ 49690:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-"use strict";
 
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -10853,7 +10851,6 @@ module.exports = createAgent;
 /***/ 66570:
 /***/ ((__unused_webpack_module, exports) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 function promisify(fn) {
@@ -10878,7 +10875,6 @@ exports["default"] = promisify;
 /***/ 15098:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-"use strict";
 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -11062,7 +11058,6 @@ function omit(obj, ...keys) {
 /***/ 77219:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-"use strict";
 
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -11083,7 +11078,6 @@ module.exports = createHttpsProxyAgent;
 /***/ 595:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-"use strict";
 
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -11466,4 +11460,3 @@ LRUMap.prototype.toString = function() {
 /***/ })
 
 };
-;

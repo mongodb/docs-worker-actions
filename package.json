@@ -9,6 +9,7 @@
     "type": "git",
     "url": "git+https://github.com/actions/typescript-action.git"
   },
+  "type": "module",
   "bugs": {
     "url": "https://github.com/actions/typescript-action/issues"
   },
