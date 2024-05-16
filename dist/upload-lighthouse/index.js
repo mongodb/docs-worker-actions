@@ -6372,43 +6372,120 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 90738:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ 67895:
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
+// ESM COMPAT FLAG
+__nccwpck_require__.r(__webpack_exports__);
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const chromeLauncher = __importStar(__nccwpck_require__(18355));
+// EXTERNAL MODULE: ./node_modules/chrome-launcher/dist/index.js
+var dist = __nccwpck_require__(18355);
+// EXTERNAL MODULE: ./node_modules/lighthouse/core/index.cjs
+var core = __nccwpck_require__(99041);
+var core_default = /*#__PURE__*/__nccwpck_require__.n(core);
+;// CONCATENATED MODULE: ./node_modules/lighthouse/core/lib/median-run.js
+/**
+ * @license
+ * Copyright 2020 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
+/** @param {LH.Result} lhr @param {string} auditName */
+const getNumericValue = (lhr, auditName) => lhr.audits[auditName]?.numericValue || NaN;
+
+/**
+ * @param {Array<number>} numbers
+ * @return {number}
+ */
+function getMedianValue(numbers) {
+  const sorted = numbers.slice().sort((a, b) => a - b);
+  if (sorted.length % 2 === 1) return sorted[(sorted.length - 1) / 2];
+  const lowerValue = sorted[sorted.length / 2 - 1];
+  const upperValue = sorted[sorted.length / 2];
+  return (lowerValue + upperValue) / 2;
+}
+
+/**
+ * @param {LH.Result} lhr
+ * @param {number} medianFcp
+ * @param {number} medianInteractive
+ */
+function getMedianSortValue(lhr, medianFcp, medianInteractive) {
+  const distanceFcp =
+    medianFcp - getNumericValue(lhr, 'first-contentful-paint');
+  const distanceInteractive =
+    medianInteractive - getNumericValue(lhr, 'interactive');
+
+  return distanceFcp * distanceFcp + distanceInteractive * distanceInteractive;
+}
+
+/**
+ * We want the run that's closest to the median of the FCP and the median of the TTI.
+ * We're using the Euclidean distance for that (https://en.wikipedia.org/wiki/Euclidean_distance).
+ * We use FCP and TTI because they represent the earliest and latest moments in the page lifecycle.
+ * We avoid the median of single measures like the performance score because they can still exhibit
+ * outlier behavior at the beginning or end of load.
+ *
+ * @param {Array<LH.Result>} runs
+ * @return {LH.Result}
+ */
+function computeMedianRun(runs) {
+  const missingFcp = runs.some(run =>
+    Number.isNaN(getNumericValue(run, 'first-contentful-paint'))
+  );
+  const missingTti = runs.some(run =>
+    Number.isNaN(getNumericValue(run, 'interactive'))
+  );
+
+  if (!runs.length) throw new Error('No runs provided');
+  if (missingFcp) throw new Error(`Some runs were missing an FCP value`);
+  if (missingTti) throw new Error(`Some runs were missing a TTI value`);
+
+  const medianFcp = getMedianValue(
+    runs.map(run => getNumericValue(run, 'first-contentful-paint'))
+  );
+
+  const medianInteractive = getMedianValue(
+    runs.map(run => getNumericValue(run, 'interactive'))
+  );
+
+  // Sort by proximity to the medians, breaking ties with the minimum TTI.
+  const sortedByProximityToMedian = runs
+    .slice()
+    .sort(
+      (a, b) =>
+        getMedianSortValue(a, medianFcp, medianInteractive) -
+          getMedianSortValue(b, medianFcp, medianInteractive) ||
+        getNumericValue(a, 'interactive') - getNumericValue(b, 'interactive')
+    );
+
+  return sortedByProximityToMedian[0];
+}
+
+/**
+ * @param {Array<LH.Result>} runs
+ * @return {Array<LH.Result>}
+ */
+function filterToValidRuns(runs) {
+  return runs
+    .filter(run =>
+      Number.isFinite(getNumericValue(run, 'first-contentful-paint'))
+    )
+    .filter(run => Number.isFinite(getNumericValue(run, 'interactive')));
+}
+
+
+
+// EXTERNAL MODULE: ./node_modules/@lhci/utils/src/build-context.js
+var build_context = __nccwpck_require__(1833);
+;// CONCATENATED MODULE: ./src/upload-lighthouse/index.ts
+
 // import { MongoClient } from "mongodb";
-const index_cjs_1 = __importDefault(__nccwpck_require__(99041));
-const median_run_1 = __nccwpck_require__(1360);
-const build_context_1 = __nccwpck_require__(1833);
+
+
+
 // import { LHServer } from './lh-server';
 // import { LHBuild } from './types/types';
 // const DB_NAME = `lighthouse`;
@@ -6419,22 +6496,22 @@ async function main() {
         console.error('No URL for lighthouse specified.');
         return;
     }
-    const chrome = await chromeLauncher.launch({ chromeFlags: ['--headless'] });
+    const chrome = await dist.launch({ chromeFlags: ['--headless'] });
     const options = {
         logLevel: 'info',
-        output: 'html',
+        output: 'json',
         port: chrome.port,
     };
     // Run Lighthouse on url
-    const runs = new Array(3).fill((0, index_cjs_1.default)(url, options));
+    const runs = new Array(3).fill(core_default()(url, options));
     await Promise.all(runs);
-    const medianLHR = (0, median_run_1.computeMedianRun)(runs);
+    const medianLHR = computeMedianRun(runs);
     // const server = new LHServer();
     // await server.setProject();
     // Get build context - Snooty branch and commit data
     // const baseBranch = server.project?.baseBranch || 'main';
-    const hash = (0, build_context_1.getCurrentHash)();
-    const branch = (0, build_context_1.getCurrentBranch)();
+    const hash = (0,build_context.getCurrentHash)();
+    const branch = (0,build_context.getCurrentBranch)();
     console.log('hash => ', hash);
     console.log('branch => ', branch);
     console.log('medianLHR => ', medianLHR);
@@ -6443,6 +6520,9 @@ async function main() {
     //   process.env.LIGHTHOUSE_CONNECTION_STRING as string,
     // );
     // const db = client.db(DB_NAME);
+    const lhRun = {
+        commitHash: hash,
+    };
     // const ancestorHash =
     //   branch === baseBranch
     //     ? getAncestorHashForBase()
@@ -6711,111 +6791,6 @@ lighthouse.snapshot = async function snapshot(...args) {
 module.exports = lighthouse;
 
 
-/***/ }),
-
-/***/ 1360:
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "computeMedianRun": () => (/* binding */ computeMedianRun),
-/* harmony export */   "filterToValidRuns": () => (/* binding */ filterToValidRuns)
-/* harmony export */ });
-/**
- * @license
- * Copyright 2020 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-
-
-/** @param {LH.Result} lhr @param {string} auditName */
-const getNumericValue = (lhr, auditName) => lhr.audits[auditName]?.numericValue || NaN;
-
-/**
- * @param {Array<number>} numbers
- * @return {number}
- */
-function getMedianValue(numbers) {
-  const sorted = numbers.slice().sort((a, b) => a - b);
-  if (sorted.length % 2 === 1) return sorted[(sorted.length - 1) / 2];
-  const lowerValue = sorted[sorted.length / 2 - 1];
-  const upperValue = sorted[sorted.length / 2];
-  return (lowerValue + upperValue) / 2;
-}
-
-/**
- * @param {LH.Result} lhr
- * @param {number} medianFcp
- * @param {number} medianInteractive
- */
-function getMedianSortValue(lhr, medianFcp, medianInteractive) {
-  const distanceFcp =
-    medianFcp - getNumericValue(lhr, 'first-contentful-paint');
-  const distanceInteractive =
-    medianInteractive - getNumericValue(lhr, 'interactive');
-
-  return distanceFcp * distanceFcp + distanceInteractive * distanceInteractive;
-}
-
-/**
- * We want the run that's closest to the median of the FCP and the median of the TTI.
- * We're using the Euclidean distance for that (https://en.wikipedia.org/wiki/Euclidean_distance).
- * We use FCP and TTI because they represent the earliest and latest moments in the page lifecycle.
- * We avoid the median of single measures like the performance score because they can still exhibit
- * outlier behavior at the beginning or end of load.
- *
- * @param {Array<LH.Result>} runs
- * @return {LH.Result}
- */
-function computeMedianRun(runs) {
-  const missingFcp = runs.some(run =>
-    Number.isNaN(getNumericValue(run, 'first-contentful-paint'))
-  );
-  const missingTti = runs.some(run =>
-    Number.isNaN(getNumericValue(run, 'interactive'))
-  );
-
-  if (!runs.length) throw new Error('No runs provided');
-  if (missingFcp) throw new Error(`Some runs were missing an FCP value`);
-  if (missingTti) throw new Error(`Some runs were missing a TTI value`);
-
-  const medianFcp = getMedianValue(
-    runs.map(run => getNumericValue(run, 'first-contentful-paint'))
-  );
-
-  const medianInteractive = getMedianValue(
-    runs.map(run => getNumericValue(run, 'interactive'))
-  );
-
-  // Sort by proximity to the medians, breaking ties with the minimum TTI.
-  const sortedByProximityToMedian = runs
-    .slice()
-    .sort(
-      (a, b) =>
-        getMedianSortValue(a, medianFcp, medianInteractive) -
-          getMedianSortValue(b, medianFcp, medianInteractive) ||
-        getNumericValue(a, 'interactive') - getNumericValue(b, 'interactive')
-    );
-
-  return sortedByProximityToMedian[0];
-}
-
-/**
- * @param {Array<LH.Result>} runs
- * @return {Array<LH.Result>}
- */
-function filterToValidRuns(runs) {
-  return runs
-    .filter(run =>
-      Number.isFinite(getNumericValue(run, 'first-contentful-paint'))
-    )
-    .filter(run => Number.isFinite(getNumericValue(run, 'interactive')));
-}
-
-
-
-
 /***/ })
 
 /******/ 	});
@@ -6860,6 +6835,18 @@ function filterToValidRuns(runs) {
 /******/ 	__nccwpck_require__.c = __webpack_module_cache__;
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__nccwpck_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__nccwpck_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/create fake namespace object */
 /******/ 	(() => {
 /******/ 		var getProto = Object.getPrototypeOf ? (obj) => (Object.getPrototypeOf(obj)) : (obj) => (obj.__proto__);
@@ -7000,7 +6987,7 @@ function filterToValidRuns(runs) {
 /******/ 	// module cache are used so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	var __webpack_exports__ = __nccwpck_require__(__nccwpck_require__.s = 90738);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(__nccwpck_require__.s = 67895);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()
