@@ -6491,7 +6491,9 @@ var build_context = __nccwpck_require__(1833);
 // const DB_NAME = `lighthouse`;
 // const REPOS_COLL_NAME = `reports`;
 async function main() {
+    console.log('start');
     const url = process.env.STAGING_URL;
+    console.log('url ', url);
     if (!url) {
         console.error('No URL for lighthouse specified.');
         return;
@@ -6505,6 +6507,7 @@ async function main() {
     // Run Lighthouse on url
     const runs = new Array(3).fill(core_default()(url, options));
     await Promise.all(runs);
+    console.log('run before compute median');
     const medianLHR = computeMedianRun(runs);
     // const server = new LHServer();
     // await server.setProject();
@@ -6520,9 +6523,9 @@ async function main() {
     //   process.env.LIGHTHOUSE_CONNECTION_STRING as string,
     // );
     // const db = client.db(DB_NAME);
-    const lhRun = {
-        commitHash: hash,
-    };
+    // const lhRun = {
+    //   commitHash: hash,
+    // }
     // const ancestorHash =
     //   branch === baseBranch
     //     ? getAncestorHashForBase()

@@ -21,7 +21,9 @@ import {
 // const REPOS_COLL_NAME = `reports`;
 
 async function main(): Promise<void> {
+  console.log('start');
   const url = process.env.STAGING_URL;
+  console.log('url ', url);
   if (!url) {
     console.error('No URL for lighthouse specified.');
     return;
@@ -37,6 +39,8 @@ async function main(): Promise<void> {
   // Run Lighthouse on url
   const runs = new Array(3).fill(lighthouse(url, options));
   await Promise.all(runs);
+
+  console.log('run before compute median')
   const medianLHR = computeMedianRun(runs);
 
   // const server = new LHServer();
@@ -57,10 +61,9 @@ async function main(): Promise<void> {
   // );
   // const db = client.db(DB_NAME);
 
-  const lhRun = {
-    commitHash: hash,
-    
-  }
+  // const lhRun = {
+  //   commitHash: hash,
+  // }
 
   // const ancestorHash =
   //   branch === baseBranch
