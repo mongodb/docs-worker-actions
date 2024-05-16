@@ -1,0 +1,7 @@
+name: Run Lighthouse score and upload to Atlas
+description: >
+  This action runs Lighthouse 3 times on a specified URL and uploads the combined scores to MongoDB Atlas.
+author: 'MongoDB'
+runs:
+  using: node20
+  main: ../dist/upload-lighthouse/index.js
