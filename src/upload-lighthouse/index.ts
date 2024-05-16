@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import * as chromeLauncher from 'chrome-launcher';
 import lighthouse from 'lighthouse/core/index.cjs';
 import { computeMedianRun } from 'lighthouse/core/lib/median-run';
