@@ -7414,7 +7414,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports["default"] = void 0;
 
-var _v = _interopRequireDefault(__nccwpck_require__(5998));
+var _v = _interopRequireDefault(__nccwpck_require__(5198));
 
 var _md = _interopRequireDefault(__nccwpck_require__(4569));
 
@@ -7426,7 +7426,7 @@ exports["default"] = _default;
 
 /***/ }),
 
-/***/ 5998:
+/***/ 5198:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -7566,7 +7566,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports["default"] = void 0;
 
-var _v = _interopRequireDefault(__nccwpck_require__(5998));
+var _v = _interopRequireDefault(__nccwpck_require__(5198));
 
 var _sha = _interopRequireDefault(__nccwpck_require__(5274));
 
@@ -9631,6 +9631,78 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 5998:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = void 0;
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+const util_1 = __nccwpck_require__(3837);
+const readFileAsync = (0, util_1.promisify)(fs_1.default.readFile);
+async function run() {
+    const githubToken = process.env.GITHUB_TOKEN;
+    if (!githubToken) {
+        core.error('ERROR! GITHUB_TOKEN is not set as an environment variable.');
+        throw new Error('Failed. GITHUB_TOKEN is not set.');
+    }
+    const octokit = github.getOctokit(githubToken);
+    const stage = process.env.STAGE ?? 'stg';
+    const prNumber = github.context.payload.pull_request?.number;
+    if (!prNumber) {
+        core.error('ERROR! PR number is undefined');
+        throw new Error('Could not retrieve PR number');
+    }
+    try {
+        const outputsFile = (await readFileAsync('cdk-infra/outputs.json')).toString();
+        const outputs = JSON.parse(outputsFile);
+        const webhook = Object.values(outputs[`auto-builder-stack-enhancedApp-${stage}-${process.env.GITHUB_HEAD_REF}-webhooks`])[0];
+        await octokit.rest.issues.createComment({
+            issue_number: prNumber,
+            body: `Your feature branch infrastructure has been deployed! \n\n Your webhook URL is: ${webhook}webhook/githubEndpoint/trigger/build\n\n For more information on how to use this endpoint, follow these [instructions](https://wiki.corp.mongodb.com/x/7FzoDg).`,
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+        });
+    }
+    catch (error) {
+        console.log('Error occurred when retrieving Webhook URL', error);
+        throw error;
+    }
+}
+exports.run = run;
+
+
+/***/ }),
+
 /***/ 2877:
 /***/ ((module) => {
 
@@ -9800,46 +9872,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__nccwpck_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__nccwpck_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__nccwpck_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__nccwpck_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
@@ -9849,57 +9881,11 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
-// ESM COMPAT FLAG
-__nccwpck_require__.r(__webpack_exports__);
+var exports = __webpack_exports__;
 
-// EXTERNAL MODULE: external "fs"
-var external_fs_ = __nccwpck_require__(7147);
-var external_fs_default = /*#__PURE__*/__nccwpck_require__.n(external_fs_);
-// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
-var core = __nccwpck_require__(2186);
-// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
-var github = __nccwpck_require__(5438);
-// EXTERNAL MODULE: external "util"
-var external_util_ = __nccwpck_require__(3837);
-;// CONCATENATED MODULE: ./src/comment-pr/run.ts
-
-
-
-
-const readFileAsync = (0,external_util_.promisify)((external_fs_default()).readFile);
-async function run() {
-    const githubToken = process.env.GITHUB_TOKEN;
-    if (!githubToken) {
-        core.error('ERROR! GITHUB_TOKEN is not set as an environment variable.');
-        throw new Error('Failed. GITHUB_TOKEN is not set.');
-    }
-    const octokit = github.getOctokit(githubToken);
-    const stage = process.env.STAGE ?? 'stg';
-    const prNumber = github.context.payload.pull_request?.number;
-    if (!prNumber) {
-        core.error('ERROR! PR number is undefined');
-        throw new Error('Could not retrieve PR number');
-    }
-    try {
-        const outputsFile = (await readFileAsync('cdk-infra/outputs.json')).toString();
-        const outputs = JSON.parse(outputsFile);
-        const webhook = Object.values(outputs[`auto-builder-stack-enhancedApp-${stage}-${process.env.GITHUB_HEAD_REF}-webhooks`])[0];
-        await octokit.rest.issues.createComment({
-            issue_number: prNumber,
-            body: `Your feature branch infrastructure has been deployed! \n\n Your webhook URL is: ${webhook}webhook/githubEndpoint/trigger/build\n\n For more information on how to use this endpoint, follow these [instructions](https://wiki.corp.mongodb.com/x/7FzoDg).`,
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
-        });
-    }
-    catch (error) {
-        console.log('Error occurred when retrieving Webhook URL', error);
-        throw error;
-    }
-}
-
-;// CONCATENATED MODULE: ./src/comment-pr/index.ts
-
-run();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const run_1 = __nccwpck_require__(5998);
+(0, run_1.run)();
 
 })();
 

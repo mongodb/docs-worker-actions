@@ -3958,11 +3958,93 @@ module.exports.implForWrapper = function (wrapper) {
 
 /***/ }),
 
+/***/ 752:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = void 0;
+const fs_1 = __importDefault(__nccwpck_require__(147));
+const readline_1 = __nccwpck_require__(521);
+const node_fetch_1 = __importDefault(__nccwpck_require__(467));
+const events_1 = __nccwpck_require__(361);
+async function run() {
+    try {
+        const apiUrl = `https://snooty-data-api.mongodb.com/prod/projects/${process.env.PROJECT_TO_BUILD}/master/documents`;
+        let metadata;
+        const documents = [];
+        const assets = {};
+        const { body } = await (0, node_fetch_1.default)(apiUrl);
+        if (body === null) {
+            throw new Error('No response body found');
+        }
+        /* Write each line to separate files in expected data structure for Snooty */
+        const rl = (0, readline_1.createInterface)({ input: body });
+        rl.on('line', (lineString) => {
+            const line = JSON.parse(lineString);
+            switch (line.type) {
+                case 'page':
+                    documents.push(line.data);
+                    break;
+                case 'metadata':
+                    metadata = line.data;
+                    break;
+                case 'asset':
+                    assets[line.data.checksum] = line.data.assetData;
+                    break;
+            }
+        });
+        await (0, events_1.once)(rl, 'close');
+        if (!metadata) {
+            throw new Error('No metadata found');
+        }
+        const documentsWriter = fs_1.default.createWriteStream('snooty-documents.json');
+        documentsWriter.write(JSON.stringify(documents));
+        const metadataWriter = fs_1.default.createWriteStream('snooty-metadata.json');
+        metadataWriter.write(JSON.stringify(metadata));
+        fs_1.default.mkdirSync('assets', { recursive: true });
+        for (const checksum in assets) {
+            const assetsWriter = fs_1.default.createWriteStream(`assets/${checksum}`, {
+                encoding: 'base64',
+            });
+            assetsWriter.write(assets[checksum]);
+        }
+    }
+    catch (error) {
+        console.error(`Error occurred when fetching and writing build data for ${process.env.PROJECT_TO_BUILD}`, error);
+        throw error;
+    }
+}
+exports.run = run;
+
+
+/***/ }),
+
 /***/ 877:
 /***/ ((module) => {
 
 module.exports = eval("require")("encoding");
 
+
+/***/ }),
+
+/***/ 361:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("events");
+
+/***/ }),
+
+/***/ 147:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("fs");
 
 /***/ }),
 
@@ -3987,6 +4069,14 @@ module.exports = require("https");
 
 "use strict";
 module.exports = require("punycode");
+
+/***/ }),
+
+/***/ 521:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("readline");
 
 /***/ }),
 
@@ -4044,7 +4134,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		// Execute the module function
 /******/ 		var threw = true;
 /******/ 		try {
-/******/ 			__webpack_modules__[moduleId](module, module.exports, __nccwpck_require__);
+/******/ 			__webpack_modules__[moduleId].call(module.exports, module, module.exports, __nccwpck_require__);
 /******/ 			threw = false;
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
@@ -4055,46 +4145,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__nccwpck_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__nccwpck_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__nccwpck_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__nccwpck_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
@@ -4104,75 +4154,11 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
-// ESM COMPAT FLAG
-__nccwpck_require__.r(__webpack_exports__);
+var exports = __webpack_exports__;
 
-;// CONCATENATED MODULE: external "fs"
-const external_fs_namespaceObject = require("fs");
-var external_fs_default = /*#__PURE__*/__nccwpck_require__.n(external_fs_namespaceObject);
-;// CONCATENATED MODULE: external "readline"
-const external_readline_namespaceObject = require("readline");
-// EXTERNAL MODULE: ./node_modules/node-fetch/lib/index.js
-var lib = __nccwpck_require__(467);
-var lib_default = /*#__PURE__*/__nccwpck_require__.n(lib);
-;// CONCATENATED MODULE: external "events"
-const external_events_namespaceObject = require("events");
-;// CONCATENATED MODULE: ./src/build-artifact/run.ts
-
-
-
-
-async function run() {
-    try {
-        const apiUrl = `https://snooty-data-api.mongodb.com/prod/projects/${process.env.PROJECT_TO_BUILD}/master/documents`;
-        let metadata;
-        const documents = [];
-        const assets = {};
-        const { body } = await lib_default()(apiUrl);
-        if (body === null) {
-            throw new Error('No response body found');
-        }
-        /* Write each line to separate files in expected data structure for Snooty */
-        const rl = (0,external_readline_namespaceObject.createInterface)({ input: body });
-        rl.on('line', (lineString) => {
-            const line = JSON.parse(lineString);
-            switch (line.type) {
-                case 'page':
-                    documents.push(line.data);
-                    break;
-                case 'metadata':
-                    metadata = line.data;
-                    break;
-                case 'asset':
-                    assets[line.data.checksum] = line.data.assetData;
-                    break;
-            }
-        });
-        await (0,external_events_namespaceObject.once)(rl, 'close');
-        if (!metadata) {
-            throw new Error('No metadata found');
-        }
-        const documentsWriter = external_fs_default().createWriteStream('snooty-documents.json');
-        documentsWriter.write(JSON.stringify(documents));
-        const metadataWriter = external_fs_default().createWriteStream('snooty-metadata.json');
-        metadataWriter.write(JSON.stringify(metadata));
-        external_fs_default().mkdirSync('assets', { recursive: true });
-        for (const checksum in assets) {
-            const assetsWriter = external_fs_default().createWriteStream(`assets/${checksum}`, {
-                encoding: 'base64',
-            });
-            assetsWriter.write(assets[checksum]);
-        }
-    }
-    catch (error) {
-        console.error(`Error occurred when fetching and writing build data for ${process.env.PROJECT_TO_BUILD}`, error);
-        throw error;
-    }
-}
-
-;// CONCATENATED MODULE: ./src/build-artifact/index.ts
-
-run();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const run_1 = __nccwpck_require__(752);
+(0, run_1.run)();
 
 })();
 
