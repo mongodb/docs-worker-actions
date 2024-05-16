@@ -6404,13 +6404,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__nccwpck_require__(75094);
 const chromeLauncher = __importStar(__nccwpck_require__(18355));
+// import { MongoClient } from "mongodb";
 const index_cjs_1 = __importDefault(__nccwpck_require__(99041));
 const median_run_1 = __nccwpck_require__(1360);
 const build_context_1 = __nccwpck_require__(1833);
 // import { LHServer } from './lh-server';
 // import { LHBuild } from './types/types';
+// const DB_NAME = `lighthouse`;
+// const REPOS_COLL_NAME = `reports`;
 async function main() {
     const url = process.env.STAGING_URL;
     if (!url) {
@@ -6436,6 +6438,11 @@ async function main() {
     console.log('hash => ', hash);
     console.log('branch => ', branch);
     console.log('medianLHR => ', medianLHR);
+    // TODO: replace this secret in github as generalized connection string, not mine
+    // const client = new MongoClient(
+    //   process.env.LIGHTHOUSE_CONNECTION_STRING as string,
+    // );
+    // const db = client.db(DB_NAME);
     // const ancestorHash =
     //   branch === baseBranch
     //     ? getAncestorHashForBase()
@@ -6460,14 +6467,6 @@ async function main() {
     // await server.api.close();
 }
 main();
-
-
-/***/ }),
-
-/***/ 75094:
-/***/ ((module) => {
-
-module.exports = eval("require")("dotenv/config");
 
 
 /***/ }),

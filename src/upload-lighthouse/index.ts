@@ -1,4 +1,5 @@
 import * as chromeLauncher from 'chrome-launcher';
+// import { MongoClient } from "mongodb";
 import lighthouse from 'lighthouse/core/index.cjs';
 import { computeMedianRun } from 'lighthouse/core/lib/median-run';
 import type { Flags } from 'lighthouse';
@@ -15,6 +16,9 @@ import {
 } from '@lhci/utils/src/build-context';
 // import { LHServer } from './lh-server';
 // import { LHBuild } from './types/types';
+
+// const DB_NAME = `lighthouse`;
+// const REPOS_COLL_NAME = `reports`;
 
 async function main(): Promise<void> {
   const url = process.env.STAGING_URL;
@@ -46,6 +50,12 @@ async function main(): Promise<void> {
   console.log('hash => ', hash);
   console.log('branch => ', branch);
   console.log('medianLHR => ', medianLHR);
+
+  // TODO: replace this secret in github as generalized connection string, not mine
+  // const client = new MongoClient(
+  //   process.env.LIGHTHOUSE_CONNECTION_STRING as string,
+  // );
+  // const db = client.db(DB_NAME);
 
   // const ancestorHash =
   //   branch === baseBranch
