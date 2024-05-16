@@ -30,7 +30,7 @@ async function main(): Promise<void> {
   const chrome = await chromeLauncher.launch({ chromeFlags: ['--headless'] });
   const options: Flags = {
     logLevel: 'info',
-    output: 'html',
+    output: 'json',
     port: chrome.port,
   };
 
@@ -56,6 +56,11 @@ async function main(): Promise<void> {
   //   process.env.LIGHTHOUSE_CONNECTION_STRING as string,
   // );
   // const db = client.db(DB_NAME);
+
+  const lhRun = {
+    commitHash: hash,
+    
+  }
 
   // const ancestorHash =
   //   branch === baseBranch
