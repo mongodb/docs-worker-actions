@@ -1,19 +1,26 @@
-import * as chromeLauncher from 'chrome-launcher';
+import fs from 'fs';
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import { promisify } from 'util';
+
+const readFileAsync = promisify(fs.readFile);
+
+// import * as chromeLauncher from 'chrome-launcher';
 // import { MongoClient } from "mongodb";
-import lighthouse from 'lighthouse/core/index.cjs';
-import { computeMedianRun } from 'lighthouse/core/lib/median-run';
-import type { Flags } from 'lighthouse';
-import {
-  getCurrentHash,
-  // getCommitTime,
-  getCurrentBranch,
-  // getExternalBuildUrl,
-  // getCommitMessage,
-  // getAuthor,
-  // getAvatarUrl,
-  // getAncestorHashForBase,
-  // getAncestorHashForBranch,
-} from '@lhci/utils/src/build-context';
+// import lighthouse from 'lighthouse/core/index.cjs';
+// import { computeMedianRun } from 'lighthouse/core/lib/median-run';
+// import type { Flags } from 'lighthouse';
+// import {
+// getCurrentHash,
+// getCommitTime,
+// getCurrentBranch,
+// getExternalBuildUrl,
+// getCommitMessage,
+// getAuthor,
+// getAvatarUrl,
+// getAncestorHashForBase,
+// getAncestorHashForBranch,
+// } from '@lhci/utils/src/build-context';
 // import { LHServer } from './lh-server';
 // import { LHBuild } from './types/types';
 
@@ -21,54 +28,54 @@ import {
 // const REPOS_COLL_NAME = `reports`;
 
 async function main(): Promise<void> {
-  console.log('start');
-  const url = process.env.STAGING_URL;
-  console.log('url ', url);
-  if (!url) {
-    console.error('No URL for lighthouse specified.');
-    return;
+  const prNumber = github.context.payload.pull_request?.number;
+  const commitHash = github.context.sha;
+  const author = github.context.actor;
+  console.log('COMMIT HASH from context... ', commitHash);
+  console.log('author from context... ', author);
+  console.log('pr number from context.. ', prNumber);
+  console.log('COMMIT Author from env ', process.env.COMMIT_AUTHOR);
+  console.log('COMMIT Hash after from env ', process.env.COMMIT_HASH_AFTER);
+  console.log('COMMIT base ref from env ', process.env.COMMIT_HASH_BASE_REF);
+  console.log('COMMIT Message from env ', process.env.COMMIT_MESSAGE);
+  console.log('COMMIT timestamp from env ', process.env.COMMIT_TIMESTAMP);
+  console.log('COMMIT Projec to build from env ', process.env.PROJECT_TO_BUILD);
+
+  if (!prNumber) {
+    core.error('ERROR! PR number is undefined');
+    throw new Error('Could not retrieve PR number');
   }
+  try {
+    const outputsFile = (
+      await readFileAsync('./lhci/manifest.json')
+    ).toString();
+    const outputs = JSON.parse(outputsFile);
 
-  const chrome = await chromeLauncher.launch({ chromeFlags: ['--headless'] });
-  const options: Flags = {
-    logLevel: 'info',
-    output: 'json',
-    port: chrome.port,
-  };
+    console.log('OUTPUT of manifest json ', outputs);
+    console.log('length ', outputs?.length);
 
-  // Run Lighthouse on url
-  const runs = new Array(3).fill(lighthouse(url, options));
-  await Promise.all(runs);
+    let results: string[] = [];
 
-  console.log('run before compute median')
-  const medianLHR = computeMedianRun(runs);
+    const getAllFilesFromFolder = (dir: string): string[] => {
+      fs.readdirSync(dir).forEach(function(file) {
+          file = dir+'/'+file;
+          const stat = fs.statSync(file);
+  
+          if (stat && stat.isDirectory()) {
+              results = results.concat(getAllFilesFromFolder(file))
+          } else results.push(file);
+      });
 
-  // const server = new LHServer();
-  // await server.setProject();
+      return results;
+    };
 
-  // Get build context - Snooty branch and commit data
-  // const baseBranch = server.project?.baseBranch || 'main';
-  const hash = getCurrentHash();
-  const branch = getCurrentBranch();
+    getAllFilesFromFolder(__dirname);
 
-  console.log('hash => ', hash);
-  console.log('branch => ', branch);
-  console.log('medianLHR => ', medianLHR);
-
-  // TODO: replace this secret in github as generalized connection string, not mine
-  // const client = new MongoClient(
-  //   process.env.LIGHTHOUSE_CONNECTION_STRING as string,
-  // );
-  // const db = client.db(DB_NAME);
-
-  // const lhRun = {
-  //   commitHash: hash,
-  // }
-
-  // const ancestorHash =
-  //   branch === baseBranch
-  //     ? getAncestorHashForBase()
-  //     : getAncestorHashForBranch('HEAD', baseBranch);
+    console.log('File System: ', results);
+  } catch (error) {
+    console.log('Error occurred when reading file', error);
+    throw error;
+  }
 
   // const buildInfo: Omit<LHBuild, 'projectId' | 'id'> = {
   //   lifecycle: 'unsealed',
@@ -83,12 +90,6 @@ async function main(): Promise<void> {
   //   committedAt: getCommitTime(hash),
   //   ancestorCommittedAt: ancestorHash ? getCommitTime(ancestorHash) : undefined,
   // };
-
-  // const build = await server.createBuild(buildInfo);
-  // Upload run to build
-  // await server.createRun(build, medianLHR, url);
-  // await server.sealBuild(build);
-  // await server.api.close();
 }
 
 main();
