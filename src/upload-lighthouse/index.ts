@@ -34,17 +34,9 @@ async function main(): Promise<void> {
   console.log('COMMIT HASH from context... ', commitHash);
   console.log('author from context... ', author);
   console.log('pr number from context.. ', prNumber);
-  console.log('COMMIT Author from env ', process.env.COMMIT_AUTHOR);
-  console.log('COMMIT Hash after from env ', process.env.COMMIT_HASH_AFTER);
-  console.log('COMMIT base ref from env ', process.env.COMMIT_HASH_BASE_REF);
-  console.log('COMMIT Message from env ', process.env.COMMIT_MESSAGE);
-  console.log('COMMIT timestamp from env ', process.env.COMMIT_TIMESTAMP);
   console.log('COMMIT Projec to build from env ', process.env.PROJECT_TO_BUILD);
+  // Need Commit Message... don't know how
 
-  if (!prNumber) {
-    core.error('ERROR! PR number is undefined');
-    throw new Error('Could not retrieve PR number');
-  }
   try {
     const outputsFile = (
       await readFileAsync('./lhci/manifest.json')
