@@ -51,9 +51,9 @@ const getAverageSummary = (manifests: any[]): Summary => {
   const summary = getEmptySummary();
   for (const property of Object.keys(summary)) {
     console.log('summary prop ', property);
-    console.log('value in reduce ', manifests.reduce((acc, cur) => acc + cur[property], 0))
+    console.log('value in reduce ', manifests.reduce((acc, cur) => acc + cur.summary[property], 0))
     // @ts-ignore
-    summary[property] = (manifests.reduce((acc, cur) => acc + cur[property], 0) / manifests.length)
+    summary[property] = (manifests.reduce((acc, cur) => acc + cur.summary[property], 0) / manifests.length)
   }
   return summary;
 };
