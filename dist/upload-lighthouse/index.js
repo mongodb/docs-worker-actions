@@ -43143,8 +43143,10 @@ const getEmptySummary = () => ({
 const getAverageSummary = (manifests) => {
     const summary = getEmptySummary();
     for (const property of Object.keys(summary)) {
+        console.log('summary prop ', property);
+        console.log('value in reduce ', manifests.reduce((acc, cur) => acc[property] + cur[property], 0));
         // @ts-ignore
-        summary[property] = (manifests.reduce((acc, cur) => acc + cur, 0) / manifests.length);
+        summary[property] = (manifests.reduce((acc, cur) => acc[property] + cur[property], 0) / manifests.length);
     }
     return summary;
 };
@@ -43210,6 +43212,9 @@ async function main() {
         const collection = db.collection(REPOS_COLL_NAME);
         const insertionMessage = await collection.insertMany([desktopRunDocument, mobileRunDocument]);
         console.log('insertion ', insertionMessage);
+        console.log('Closing');
+        await client.close();
+        return;
     }
     catch (error) {
         console.log('Error occurred when reading file', error);
