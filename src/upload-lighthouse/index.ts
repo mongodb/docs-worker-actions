@@ -74,6 +74,29 @@ const getRuns = async (
   return { jsonRuns, htmlRuns };
 };
 
+const sortAndReadRuns = async (
+  manifests: Manifest[],
+): Promise<
+  { jsonRuns: JsonRun[]; htmlRuns: string[]; summary: Summary; url: string }[]
+> => {
+  const runs: {
+    jsonRuns: JsonRun[];
+    htmlRuns: string[];
+    summary: Summary;
+    url: string;
+  }[] = [];
+  const uniqueUrls = new Set(manifests.map(manifest => manifest.url));
+
+  for (const url of uniqueUrls) {
+    const manifestsForUrl = manifests.filter(manifest => manifest.url === url);
+    const summary = getAverageSummary(manifestsForUrl);
+    const { jsonRuns, htmlRuns } = await getRuns(manifestsForUrl);
+    runs.push({ jsonRuns, htmlRuns, summary, url });
+  }
+
+  return runs;
+};
+
 async function main(): Promise<void> {
   const commitHash = github.context.sha;
   const author = github.context.actor;
@@ -99,42 +122,45 @@ async function main(): Promise<void> {
         [[], []] as Manifest[][],
       );
 
-    const urlTested = mobileRunManifests[0].url;
-    const desktopSummary = getAverageSummary(desktopRunManifests);
-    const { htmlRuns: desktopHtmlRuns, jsonRuns: desktopJsonRuns } =
-      await getRuns(desktopRunManifests);
+    const desktopRuns = await sortAndReadRuns(desktopRunManifests);
+    const desktopRunDocuments = [];
 
-    const desktopRunDocument = {
-      commitHash,
-      commitMessage,
-      commitTimestamp,
-      author,
-      project,
-      branch,
-      url: urlTested,
-      summary: desktopSummary,
-      htmlRuns: desktopHtmlRuns,
-      jsonRuns: desktopJsonRuns,
-      type: 'desktop',
-    };
+    for (const desktopRun of desktopRuns) {
+      const { htmlRuns, jsonRuns, summary, url } = desktopRun;
+      desktopRunDocuments.push({
+        commitHash,
+        commitMessage,
+        commitTimestamp,
+        author,
+        project,
+        branch,
+        url,
+        summary,
+        htmlRuns,
+        jsonRuns,
+        type: 'desktop',
+      });
+    }
 
-    const mobileSummary = getAverageSummary(mobileRunManifests);
-    const { htmlRuns: mobileHtmlRuns, jsonRuns: mobileJsonRuns } =
-      await getRuns(mobileRunManifests);
+    const mobileRuns = await sortAndReadRuns(mobileRunManifests);
+    const mobileRunDocuments = [];
 
-    const mobileRunDocument = {
-      commitHash,
-      commitMessage,
-      commitTimestamp,
-      author,
-      project,
-      branch,
-      url: urlTested,
-      summary: mobileSummary,
-      htmlRuns: mobileHtmlRuns,
-      jsonRuns: mobileJsonRuns,
-      type: 'mobile',
-    };
+    for (const mobileRun of mobileRuns) {
+      const { htmlRuns, jsonRuns, summary, url } = mobileRun;
+      mobileRunDocuments.push({
+        commitHash,
+        commitMessage,
+        commitTimestamp,
+        author,
+        project,
+        branch,
+        url,
+        summary,
+        htmlRuns,
+        jsonRuns,
+        type: 'mobile',
+      });
+    }
 
     console.log('Uploading to MongoDB...');
     const collectionName = branch === 'main' ? MAIN_COLL_NAME : PR_COLL_NAME;
@@ -142,7 +168,10 @@ async function main(): Promise<void> {
     const db = client.db(DB_NAME);
 
     const collection = db.collection(collectionName);
-    await collection.insertMany([desktopRunDocument, mobileRunDocument]);
+    await collection.insertMany([
+      ...desktopRunDocuments,
+      ...mobileRunDocuments,
+    ]);
 
     console.log('Closing database connection');
     await client.close();
