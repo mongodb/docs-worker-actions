@@ -2,6 +2,7 @@ import fs from 'fs';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { promisify } from 'util';
+import { MongoClient } from 'mongodb';
 
 const readFileAsync = promisify(fs.readFile);
 
@@ -27,88 +28,118 @@ const readFileAsync = promisify(fs.readFile);
 // const DB_NAME = `lighthouse`;
 // const REPOS_COLL_NAME = `reports`;
 
+interface Summary {
+  seo: number;
+  performance: number;
+  'best-practices': number;
+  pwa: number;
+  accessibility: number;
+}
+
+const DB_NAME = `lighthouse`;
+const REPOS_COLL_NAME = `reports`;
+
+const getEmptySummary = (): Summary => ({
+  seo: 0,
+  performance: 0,
+  'best-practices': 0,
+  pwa: 0,
+  accessibility: 0,
+});
+
+const getAverageSummary = (manifests: any[]): Summary => {
+  const summary = getEmptySummary();
+  for (const property of Object.keys(summary)) {
+    // @ts-ignore
+    summary[property] = (manifests.reduce((acc, cur) => acc + cur, 0) / manifests.length)
+  }
+  return summary;
+};
+
+const getRuns = async (manifests: any[]): Promise<{ jsonRuns: any[], htmlRuns: string[] }> => {
+  const jsonRuns = [];
+  const htmlRuns = [];
+
+  for (const manifest of manifests) {
+    jsonRuns.push(JSON.parse((
+      await readFileAsync(manifest.jsonPath)
+    ).toString()));
+
+    htmlRuns.push((
+      await readFileAsync(manifest.htmlPath)
+    ).toString());
+  }
+
+  await Promise.all(jsonRuns);
+  await Promise.all(htmlRuns);
+  return { jsonRuns, htmlRuns };
+}
+
 async function main(): Promise<void> {
-  const prNumber = github.context.payload.pull_request?.number;
   const commitHash = github.context.sha;
   const author = github.context.actor;
   console.log('COMMIT HASH from context... ', commitHash);
   console.log('author from context... ', author);
-  console.log('pr number from context.. ', prNumber);
   console.log('COMMIT Projec to build from env ', process.env.PROJECT_TO_BUILD);
-  // Need Commit Message... don't know how
+  // TODO: Need Commit Message...
   // Keep trying ${{ github.event.head_commit.message }}
 
   try {
     const outputsFile = (
       await readFileAsync('./lhci/manifest.json')
     ).toString();
-    const manifestsOfLighthouseRuns = JSON.parse(outputsFile);
+    // @ts-ignore
+    const manifestsOfLighthouseRuns: any[] = JSON.parse(outputsFile);
 
     console.log('OUTPUT of manifest json ', manifestsOfLighthouseRuns);
-    console.log('length ', manifestsOfLighthouseRuns?.length);
+    
+    // @ts-ignore
+    const [desktopRunManifests, mobileRunManifests] = manifestsOfLighthouseRuns.reduce((acc, cur) => {
+      if (cur.url.includes('?desktop')) acc[0].push(cur);
+      else acc[1].push(cur);
+      return acc;
+    }, [[], []] as any[][]);
+    
+    const urlTested = mobileRunManifests[0].url;
+    const desktopSummary = getAverageSummary(desktopRunManifests);
+    const { htmlRuns: desktopHtmlRuns, jsonRuns: desktopJsonRuns } = await getRuns(desktopRunManifests);
 
-    const { url, htmlPath, jsonPath, summary } = manifestsOfLighthouseRuns[0];
-
-    const runJSON = JSON.parse((
-      await readFileAsync(jsonPath)
-    ).toString());
-
-    console.log('json ', runJSON);
-
-    const runHTML = (
-      await readFileAsync(htmlPath)
-    ).toString();
-
-    console.log('html ', runHTML)
-
-    const runDocument = {
+    const desktopRunDocument = {
       commitHash,
       author,
       project: process.env.PROJECT_TO_BUILD,
-      url,
-      json: runJSON,
-      html: runHTML,
-      summary,
+      url: urlTested,
+      summary: desktopSummary,
+      htmlRuns: desktopHtmlRuns,
+      jsonRuns: desktopJsonRuns,
+      type: 'desktop',
     };
 
-    console.log('run document ', runDocument);
+    const mobileSummary = getAverageSummary(mobileRunManifests);
+    const { htmlRuns: mobileHtmlRuns, jsonRuns: mobileJsonRuns } = await getRuns(mobileRunManifests);
 
-    // let results: string[] = [];
+    const mobileRunDocument = {
+      commitHash,
+      author,
+      project: process.env.PROJECT_TO_BUILD,
+      url: urlTested,
+      summary: mobileSummary,
+      htmlRuns: mobileHtmlRuns,
+      jsonRuns: mobileJsonRuns,
+      type: 'mobile',
+    };
 
-    // const getAllFilesFromFolder = (dir: string): string[] => {
-    //   fs.readdirSync(dir).forEach(function(file) {
-    //       file = dir+'/'+file;
-    //       const stat = fs.statSync(file);
-  
-    //       if (stat && stat.isDirectory()) {
-    //           results = results.concat(getAllFilesFromFolder(file))
-    //       } else results.push(file);
-    //   });
 
-    //   return results;
-    // };
+    const client = new MongoClient(process.env.ATLAS_URI || '');
+    const db = client.db(DB_NAME);
 
-    // getAllFilesFromFolder(__dirname);
-
-    // console.log('File System: ', results);
+    const collection = db.collection(REPOS_COLL_NAME);
+    const insertionMessage = await collection.insertMany([desktopRunDocument, mobileRunDocument]);
+    console.log('insertion ', insertionMessage);
   } catch (error) {
     console.log('Error occurred when reading file', error);
     throw error;
   }
-
-  // const buildInfo: Omit<LHBuild, 'projectId' | 'id'> = {
-  //   lifecycle: 'unsealed',
-  //   hash: hash + Date.now(),
-  //   branch,
-  //   ancestorHash,
-  //   commitMessage: getCommitMessage(hash),
-  //   author: getAuthor(hash),
-  //   avatarUrl: getAvatarUrl(hash),
-  //   externalBuildUrl: getExternalBuildUrl(),
-  //   runAt: new Date().toISOString(),
-  //   committedAt: getCommitTime(hash),
-  //   ancestorCommittedAt: ancestorHash ? getCommitTime(ancestorHash) : undefined,
-  // };
 }
 
 main();
