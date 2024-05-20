@@ -9,7 +9,6 @@
     "type": "git",
     "url": "git+https://github.com/actions/typescript-action.git"
   },
-  "type": "module",
   "bugs": {
     "url": "https://github.com/actions/typescript-action/issues"
   },
@@ -79,15 +78,12 @@
     "@aws-sdk/client-api-gateway": "^3.496.0",
     "@aws-sdk/client-s3": "^3.507.0",
     "@aws-sdk/client-ssm": "^3.496.0",
-    "@lhci/cli": "^0.13.0",
     "axios": "^1.6.5",
-    "lighthouse": "^11.6.0",
     "mime": "^4.0.1",
     "mongodb": "^6.6.2",
     "node-fetch": "^2.7.0"
   },
   "devDependencies": {
-    "@babel/plugin-syntax-import-meta": "^7.10.4",
     "@types/jest": "^29.5.4",
     "@types/node": "^20.8.10",
     "@types/node-fetch": "^2.6.11",
