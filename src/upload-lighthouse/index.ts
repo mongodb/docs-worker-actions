@@ -36,34 +36,61 @@ async function main(): Promise<void> {
   console.log('pr number from context.. ', prNumber);
   console.log('COMMIT Projec to build from env ', process.env.PROJECT_TO_BUILD);
   // Need Commit Message... don't know how
+  // Keep trying ${{ github.event.head_commit.message }}
 
   try {
     const outputsFile = (
       await readFileAsync('./lhci/manifest.json')
     ).toString();
-    const outputs = JSON.parse(outputsFile);
+    const manifestsOfLighthouseRuns = JSON.parse(outputsFile);
 
-    console.log('OUTPUT of manifest json ', outputs);
-    console.log('length ', outputs?.length);
+    console.log('OUTPUT of manifest json ', manifestsOfLighthouseRuns);
+    console.log('length ', manifestsOfLighthouseRuns?.length);
 
-    let results: string[] = [];
+    const { url, htmlPath, jsonPath, summary } = manifestsOfLighthouseRuns[0];
 
-    const getAllFilesFromFolder = (dir: string): string[] => {
-      fs.readdirSync(dir).forEach(function(file) {
-          file = dir+'/'+file;
-          const stat = fs.statSync(file);
-  
-          if (stat && stat.isDirectory()) {
-              results = results.concat(getAllFilesFromFolder(file))
-          } else results.push(file);
-      });
+    const runJSON = JSON.parse((
+      await readFileAsync(jsonPath)
+    ).toString());
 
-      return results;
+    console.log('json ', runJSON);
+
+    const runHTML = (
+      await readFileAsync(htmlPath)
+    ).toString();
+
+    console.log('html ', runHTML)
+
+    const runDocument = {
+      commitHash,
+      author,
+      project: process.env.PROJECT_TO_BUILD,
+      url,
+      json: runJSON,
+      html: runHTML,
+      summary,
     };
 
-    getAllFilesFromFolder(__dirname);
+    console.log('run document ', runDocument);
 
-    console.log('File System: ', results);
+    // let results: string[] = [];
+
+    // const getAllFilesFromFolder = (dir: string): string[] => {
+    //   fs.readdirSync(dir).forEach(function(file) {
+    //       file = dir+'/'+file;
+    //       const stat = fs.statSync(file);
+  
+    //       if (stat && stat.isDirectory()) {
+    //           results = results.concat(getAllFilesFromFolder(file))
+    //       } else results.push(file);
+    //   });
+
+    //   return results;
+    // };
+
+    // getAllFilesFromFolder(__dirname);
+
+    // console.log('File System: ', results);
   } catch (error) {
     console.log('Error occurred when reading file', error);
     throw error;
