@@ -43131,8 +43131,16 @@ const github = __importStar(__nccwpck_require__(5438));
 const util_1 = __nccwpck_require__(3837);
 const mongodb_1 = __nccwpck_require__(8821);
 const readFileAsync = (0, util_1.promisify)(fs_1.default.readFile);
+const summaryProperties = [
+    'seo',
+    'performance',
+    'best-practices',
+    'pwa',
+    'accessibility',
+];
 const DB_NAME = `lighthouse`;
-const REPOS_COLL_NAME = `reports`;
+const PR_COLL_NAME = `pr_reports`;
+const MAIN_COLL_NAME = `main_reports`;
 const getEmptySummary = () => ({
     seo: 0,
     performance: 0,
@@ -43142,11 +43150,10 @@ const getEmptySummary = () => ({
 });
 const getAverageSummary = (manifests) => {
     const summary = getEmptySummary();
-    for (const property of Object.keys(summary)) {
-        console.log('summary prop ', property);
-        console.log('value in reduce ', manifests.reduce((acc, cur) => acc + cur.summary[property], 0));
-        // @ts-ignore
-        summary[property] = (manifests.reduce((acc, cur) => acc + cur.summary[property], 0) / manifests.length);
+    for (const property of summaryProperties) {
+        summary[property] =
+            manifests.reduce((acc, cur) => acc + cur.summary[property], 0) /
+                manifests.length;
     }
     return summary;
 };
@@ -43164,18 +43171,13 @@ const getRuns = async (manifests) => {
 async function main() {
     const commitHash = github.context.sha;
     const author = github.context.actor;
-    console.log('Commit Message from context... ', process.env.COMMIT_MESSAGE);
-    console.log('timestamp from context... ', process.env.COMMIT_TIMESTAMP);
-    // TODO: Need Commit Message...
-    // Keep trying ${{ github.event.head_commit.message }}
-    // TODO: Branch name
-    // TODO: If merge, set that as a property - OR put in a different database?
+    const commitMessage = process.env.COMMIT_MESSAGE || '';
+    const commitTimestamp = process.env.COMMIT_TIMESTAMP || '';
+    const project = process.env.PROJECT_TO_BUILD || '';
+    const branch = process.env.BRANCH_NAME || '';
     try {
         const outputsFile = (await readFileAsync('./lhci/manifest.json')).toString();
-        // @ts-ignore
         const manifestsOfLighthouseRuns = JSON.parse(outputsFile);
-        console.log('OUTPUT of manifest json ', manifestsOfLighthouseRuns);
-        // @ts-ignore
         const [desktopRunManifests, mobileRunManifests] = manifestsOfLighthouseRuns.reduce((acc, cur) => {
             if (cur.url.includes('?desktop'))
                 acc[0].push(cur);
@@ -43188,9 +43190,11 @@ async function main() {
         const { htmlRuns: desktopHtmlRuns, jsonRuns: desktopJsonRuns } = await getRuns(desktopRunManifests);
         const desktopRunDocument = {
             commitHash,
+            commitMessage,
+            commitTimestamp,
             author,
-            project: process.env.PROJECT_TO_BUILD,
-            branch: process.env.BRANCH_NAME,
+            project,
+            branch,
             url: urlTested,
             summary: desktopSummary,
             htmlRuns: desktopHtmlRuns,
@@ -43201,21 +43205,24 @@ async function main() {
         const { htmlRuns: mobileHtmlRuns, jsonRuns: mobileJsonRuns } = await getRuns(mobileRunManifests);
         const mobileRunDocument = {
             commitHash,
+            commitMessage,
+            commitTimestamp,
             author,
-            project: process.env.PROJECT_TO_BUILD,
-            branch: process.env.BRANCH_NAME,
+            project,
+            branch,
             url: urlTested,
             summary: mobileSummary,
             htmlRuns: mobileHtmlRuns,
             jsonRuns: mobileJsonRuns,
             type: 'mobile',
         };
+        console.log('Uploading to MongoDB...');
+        const collectionName = branch === 'main' ? MAIN_COLL_NAME : PR_COLL_NAME;
         const client = new mongodb_1.MongoClient(process.env.ATLAS_URI || '');
         const db = client.db(DB_NAME);
-        const collection = db.collection(REPOS_COLL_NAME);
-        const insertionMessage = await collection.insertMany([desktopRunDocument, mobileRunDocument]);
-        console.log('insertion ', insertionMessage);
-        console.log('Closing');
+        const collection = db.collection(collectionName);
+        await collection.insertMany([desktopRunDocument, mobileRunDocument]);
+        console.log('Closing database connection');
         await client.close();
         return;
     }
