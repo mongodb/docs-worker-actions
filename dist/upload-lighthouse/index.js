@@ -43144,9 +43144,9 @@ const getAverageSummary = (manifests) => {
     const summary = getEmptySummary();
     for (const property of Object.keys(summary)) {
         console.log('summary prop ', property);
-        console.log('value in reduce ', manifests.reduce((acc, cur) => acc[property] + cur[property], 0));
+        console.log('value in reduce ', manifests.reduce((acc, cur) => acc + cur[property], 0));
         // @ts-ignore
-        summary[property] = (manifests.reduce((acc, cur) => acc[property] + cur[property], 0) / manifests.length);
+        summary[property] = (manifests.reduce((acc, cur) => acc + cur[property], 0) / manifests.length);
     }
     return summary;
 };
@@ -43164,11 +43164,12 @@ const getRuns = async (manifests) => {
 async function main() {
     const commitHash = github.context.sha;
     const author = github.context.actor;
-    console.log('COMMIT HASH from context... ', commitHash);
-    console.log('author from context... ', author);
-    console.log('COMMIT Projec to build from env ', process.env.PROJECT_TO_BUILD);
+    console.log('Commit Message from context... ', process.env.COMMIT_MESSAGE);
+    console.log('timestamp from context... ', process.env.COMMIT_TIMESTAMP);
     // TODO: Need Commit Message...
     // Keep trying ${{ github.event.head_commit.message }}
+    // TODO: Branch name
+    // TODO: If merge, set that as a property - OR put in a different database?
     try {
         const outputsFile = (await readFileAsync('./lhci/manifest.json')).toString();
         // @ts-ignore
@@ -43189,6 +43190,7 @@ async function main() {
             commitHash,
             author,
             project: process.env.PROJECT_TO_BUILD,
+            branch: process.env.BRANCH_NAME,
             url: urlTested,
             summary: desktopSummary,
             htmlRuns: desktopHtmlRuns,
@@ -43201,6 +43203,7 @@ async function main() {
             commitHash,
             author,
             project: process.env.PROJECT_TO_BUILD,
+            branch: process.env.BRANCH_NAME,
             url: urlTested,
             summary: mobileSummary,
             htmlRuns: mobileHtmlRuns,
