@@ -77,7 +77,6 @@ runs:
       env:
         NETLIFY_AUTH_TOKEN: ${{ inputs.site-secret }}
         NETLIFY_SITE_ID: ${{ inputs.site-id }}
-      timeout-minutes: 1
     - name: Create parser cache
       shell: bash
       run: snooty create-cache .
