@@ -32,15 +32,19 @@ runs:
           snooty/
         key: ${{runner.os}}-site-cache
     - name: Install parser
+      shell: bash
       run: |
         curl -L -o snooty-parser.zip https://github.com/mongodb/snooty-parser/releases/download/v0.16.6/snooty-v0.16.6-linux_x86_64.zip
         unzip -d /opt/ snooty-parser.zip
     - name: Add env
+      shell: bash
       run: echo "/opt/snooty" >> $GITHUB_PATH
     - name: Run parser
+      shell: bash
       run: snooty build . --output=./bundle.zip
 
     - name: Install frontend
+      shell: bash
       env:
         NPM_BASE_64_AUTH: ${{inputs.npm-auth}}
         NPM_EMAIL: ${{inputs.npm-email}}
@@ -55,6 +59,7 @@ runs:
         mv ./docs-tools/themes/mongodb/static ./static/docs-tools
         mv ./docs-tools/themes/guides/static/images/bg-accent.svg ./static/docs-tools/images/bg-accent.svg
     - name: Build HTML
+      shell: bash
       run: |
         cd snooty                
         npm run build
@@ -74,6 +79,7 @@ runs:
         NETLIFY_SITE_ID: ${{ inputs.site-id }}
       timeout-minutes: 1
     - name: Create parser cache
+      shell: bash
       run: snooty create-cache .
     - name: Cache Snooty parser
       id: cache-snooty-parser
