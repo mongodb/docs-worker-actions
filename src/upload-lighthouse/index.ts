@@ -107,14 +107,15 @@ const getRuns = async (
 };
 
 interface SortedRuns {
-  jsonRuns: JsonRun[]; htmlRuns: string[]; summary: Summary; url: string
+  jsonRuns: JsonRun[];
+  htmlRuns: string[];
+  summary: Summary;
+  url: string;
 }
 
 const sortAndReadRuns = async (
   manifests: Manifest[],
-): Promise<
-  SortedRuns[]
-> => {
+): Promise<SortedRuns[]> => {
   const runs: {
     jsonRuns: JsonRun[];
     htmlRuns: string[];
@@ -133,7 +134,10 @@ const sortAndReadRuns = async (
   return runs;
 };
 
-const createRunDocument = ({ url, summary, htmlRuns, jsonRuns }: SortedRuns, type: 'mobile' | 'desktop'): RunDocument => {
+const createRunDocument = (
+  { url, summary, htmlRuns, jsonRuns }: SortedRuns,
+  type: 'mobile' | 'desktop',
+): RunDocument => {
   const commitHash = github.context.sha;
   const author = github.context.actor;
   const commitMessage = process.env.COMMIT_MESSAGE || '';
@@ -154,7 +158,7 @@ const createRunDocument = ({ url, summary, htmlRuns, jsonRuns }: SortedRuns, typ
     jsonRuns,
     type,
   };
-}
+};
 
 async function main(): Promise<void> {
   const branch = process.env.BRANCH_NAME || '';
@@ -194,7 +198,9 @@ async function main(): Promise<void> {
     const client = new MongoClient(process.env.ATLAS_URI || '');
     const db = client.db(DB_NAME);
 
-    console.log(`Uploading to Atlas DB ${DB_NAME} and Collection ${collectionName}...`);
+    console.log(
+      `Uploading to Atlas DB ${DB_NAME} and Collection ${collectionName}...`,
+    );
     const collection = db.collection(collectionName);
     await collection.insertMany([
       ...desktopRunDocuments,
