@@ -43126,6 +43126,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+/**
+ * This action will need to be run after using a lhci command in a Github workflow.
+ * That command write files to the specified file directory.
+ * The structure and documentation of the outputted files can be found here:
+ * https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md#outputdir
+ 
+ * This action will read the manifest.json file, use this to sort the multiple Lighthouse runs of the same url/environment,
+ * average the summaries together, read the html and json files of each, combine all of this into one document,
+ * and finally upload this metadata on each macro-run to the appropriate Atlas collection.
+ */
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const github = __importStar(__nccwpck_require__(5438));
 const util_1 = __nccwpck_require__(3837);
@@ -43139,8 +43149,11 @@ const summaryProperties = [
     'accessibility',
 ];
 const DB_NAME = `lighthouse`;
+/* Used on PR creation and update (synchronize) */
 const PR_COLL_NAME = `pr_reports`;
+/* Used on merge to main in Snooty to keep running scores of production */
 const MAIN_COLL_NAME = `main_reports`;
+/* Helpers */
 const getEmptySummary = () => ({
     seo: 0,
     performance: 0,
@@ -43179,12 +43192,28 @@ const sortAndReadRuns = async (manifests) => {
     }
     return runs;
 };
-async function main() {
+const createRunDocument = ({ url, summary, htmlRuns, jsonRuns }, type) => {
     const commitHash = github.context.sha;
     const author = github.context.actor;
     const commitMessage = process.env.COMMIT_MESSAGE || '';
     const commitTimestamp = process.env.COMMIT_TIMESTAMP || '';
     const project = process.env.PROJECT_TO_BUILD || '';
+    const branch = process.env.BRANCH_NAME || '';
+    return {
+        commitHash,
+        commitMessage,
+        commitTimestamp,
+        author,
+        project,
+        branch,
+        url,
+        summary,
+        htmlRuns,
+        jsonRuns,
+        type,
+    };
+};
+async function main() {
     const branch = process.env.BRANCH_NAME || '';
     try {
         const outputsFile = (await readFileAsync('./lhci/manifest.json')).toString();
@@ -43199,45 +43228,22 @@ async function main() {
         const desktopRuns = await sortAndReadRuns(desktopRunManifests);
         const desktopRunDocuments = [];
         for (const desktopRun of desktopRuns) {
-            const { htmlRuns, jsonRuns, summary, url } = desktopRun;
-            desktopRunDocuments.push({
-                commitHash,
-                commitMessage,
-                commitTimestamp,
-                author,
-                project,
-                branch,
-                url,
-                summary,
-                htmlRuns,
-                jsonRuns,
-                type: 'desktop',
-            });
+            desktopRunDocuments.push(createRunDocument(desktopRun, 'desktop'));
         }
         const mobileRuns = await sortAndReadRuns(mobileRunManifests);
         const mobileRunDocuments = [];
         for (const mobileRun of mobileRuns) {
-            const { htmlRuns, jsonRuns, summary, url } = mobileRun;
-            mobileRunDocuments.push({
-                commitHash,
-                commitMessage,
-                commitTimestamp,
-                author,
-                project,
-                branch,
-                url,
-                summary,
-                htmlRuns,
-                jsonRuns,
-                type: 'mobile',
-            });
+            mobileRunDocuments.push(createRunDocument(mobileRun, 'mobile'));
         }
-        console.log('Uploading to MongoDB...');
         const collectionName = branch === 'main' ? MAIN_COLL_NAME : PR_COLL_NAME;
         const client = new mongodb_1.MongoClient(process.env.ATLAS_URI || '');
         const db = client.db(DB_NAME);
+        console.log(`Uploading to Atlas DB ${DB_NAME} and Collection ${collectionName}...`);
         const collection = db.collection(collectionName);
-        await collection.insertMany([...desktopRunDocuments, ...mobileRunDocuments]);
+        await collection.insertMany([
+            ...desktopRunDocuments,
+            ...mobileRunDocuments,
+        ]);
         console.log('Closing database connection');
         await client.close();
         return;

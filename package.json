@@ -31,6 +31,7 @@
     "format:write": "prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
     "lint": "npx eslint . -c ./.eslintrc.yml",
+    "lint:fix": "npm run lint -- --fix",
     "package:module": "ncc build",
     "package:comment-pr": "ncc build src/comment-pr/index.ts --license licenses.txt -o dist/comment-pr",
     "package:publish-build": "ncc build src/publish-build/index.ts --license licenses.txt -o dist/publish-build",
