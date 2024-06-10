@@ -43170,6 +43170,7 @@ const getAverageSummary = (manifests) => {
     }
     return summary;
 };
+/* Reads and returns files of runs in arrays */
 const getRuns = async (manifests) => {
     const jsonRuns = [];
     const htmlRuns = [];
@@ -43181,7 +43182,7 @@ const getRuns = async (manifests) => {
     await Promise.all(htmlRuns);
     return { jsonRuns, htmlRuns };
 };
-const sortAndReadRuns = async (manifests) => {
+const sortAndAverageRuns = async (manifests) => {
     const runs = [];
     const uniqueUrls = new Set(manifests.map(manifest => manifest.url));
     for (const url of uniqueUrls) {
@@ -43225,12 +43226,12 @@ async function main() {
                 acc[1].push(cur);
             return acc;
         }, [[], []]);
-        const desktopRuns = await sortAndReadRuns(desktopRunManifests);
+        const desktopRuns = await sortAndAverageRuns(desktopRunManifests);
         const desktopRunDocuments = [];
         for (const desktopRun of desktopRuns) {
             desktopRunDocuments.push(createRunDocument(desktopRun, 'desktop'));
         }
-        const mobileRuns = await sortAndReadRuns(mobileRunManifests);
+        const mobileRuns = await sortAndAverageRuns(mobileRunManifests);
         const mobileRunDocuments = [];
         for (const mobileRun of mobileRuns) {
             mobileRunDocuments.push(createRunDocument(mobileRun, 'mobile'));
