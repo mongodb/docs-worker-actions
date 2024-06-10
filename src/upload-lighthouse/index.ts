@@ -87,6 +87,7 @@ const getAverageSummary = (manifests: Manifest[]): Summary => {
   return summary;
 };
 
+/* Reads and returns files of runs in arrays */
 const getRuns = async (
   manifests: Manifest[],
 ): Promise<{ jsonRuns: JsonRun[]; htmlRuns: string[] }> => {
@@ -113,7 +114,7 @@ interface SortedRuns {
   url: string;
 }
 
-const sortAndReadRuns = async (
+const sortAndAverageRuns = async (
   manifests: Manifest[],
 ): Promise<SortedRuns[]> => {
   const runs: {
@@ -180,14 +181,14 @@ async function main(): Promise<void> {
         [[], []] as Manifest[][],
       );
 
-    const desktopRuns = await sortAndReadRuns(desktopRunManifests);
+    const desktopRuns = await sortAndAverageRuns(desktopRunManifests);
     const desktopRunDocuments = [];
 
     for (const desktopRun of desktopRuns) {
       desktopRunDocuments.push(createRunDocument(desktopRun, 'desktop'));
     }
 
-    const mobileRuns = await sortAndReadRuns(mobileRunManifests);
+    const mobileRuns = await sortAndAverageRuns(mobileRunManifests);
     const mobileRunDocuments = [];
 
     for (const mobileRun of mobileRuns) {
