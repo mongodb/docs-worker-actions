@@ -1,3 +1,13 @@
+/**
+ * This action will need to be run after using a lhci command in a Github workflow.
+ * That command write files to the specified file directory.
+ * The structure and documentation of the outputted files can be found here: 
+ * https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md#outputdir
+ 
+ * This action will read the manifest.json file, use this to sort the multiple Lighthouse runs of the same url/environment,
+ * average the summaries together, read the html and json files of each, combine all of this into one document,
+ * and finally upload this metadata on each macro-run to the appropriate Atlas collection.
+ */
 import fs from 'fs';
 import * as github from '@actions/github';
 import { promisify } from 'util';
@@ -5,6 +15,7 @@ import { MongoClient } from 'mongodb';
 
 const readFileAsync = promisify(fs.readFile);
 
+/* Summary of important Lighthouse scores of a run */
 interface Summary {
   seo: number;
   performance: number;
@@ -20,6 +31,7 @@ const summaryProperties: (keyof Summary)[] = [
   'accessibility',
 ];
 
+/* Manifest structure outputted for each Lighthouse run */
 interface Manifest {
   url: string;
   isRepresentativeRun: boolean;
@@ -28,15 +40,35 @@ interface Manifest {
   summary: Summary;
 }
 
+/*
+ * General type to help define a very large JSON output
+ * Documentation of JSON output: https://github.com/GoogleChrome/lighthouse/blob/main/docs/understanding-results.md
+ */
 interface JsonRun {
-  /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
-  [k: string]: any;
+  [k: string]: unknown;
+}
+
+interface RunDocument {
+  jsonRuns: JsonRun[];
+  htmlRuns: string[];
+  summary: Summary;
+  url: string;
+  type: 'desktop' | 'mobile';
+  commitHash: string;
+  commitMessage: string;
+  commitTimestamp: string;
+  author: string;
+  project: string;
+  branch: string;
 }
 
 const DB_NAME = `lighthouse`;
+/* Used on PR creation and update (synchronize) */
 const PR_COLL_NAME = `pr_reports`;
+/* Used on merge to main in Snooty to keep running scores of production */
 const MAIN_COLL_NAME = `main_reports`;
 
+/* Helpers */
 const getEmptySummary = (): Summary => ({
   seo: 0,
   performance: 0,
@@ -74,10 +106,14 @@ const getRuns = async (
   return { jsonRuns, htmlRuns };
 };
 
+interface SortedRuns {
+  jsonRuns: JsonRun[]; htmlRuns: string[]; summary: Summary; url: string
+}
+
 const sortAndReadRuns = async (
   manifests: Manifest[],
 ): Promise<
-  { jsonRuns: JsonRun[]; htmlRuns: string[]; summary: Summary; url: string }[]
+  SortedRuns[]
 > => {
   const runs: {
     jsonRuns: JsonRun[];
@@ -97,12 +133,30 @@ const sortAndReadRuns = async (
   return runs;
 };
 
-async function main(): Promise<void> {
+const createRunDocument = ({ url, summary, htmlRuns, jsonRuns }: SortedRuns, type: 'mobile' | 'desktop'): RunDocument => {
   const commitHash = github.context.sha;
   const author = github.context.actor;
   const commitMessage = process.env.COMMIT_MESSAGE || '';
   const commitTimestamp = process.env.COMMIT_TIMESTAMP || '';
   const project = process.env.PROJECT_TO_BUILD || '';
+  const branch = process.env.BRANCH_NAME || '';
+
+  return {
+    commitHash,
+    commitMessage,
+    commitTimestamp,
+    author,
+    project,
+    branch,
+    url,
+    summary,
+    htmlRuns,
+    jsonRuns,
+    type,
+  };
+}
+
+async function main(): Promise<void> {
   const branch = process.env.BRANCH_NAME || '';
 
   try {
@@ -126,47 +180,21 @@ async function main(): Promise<void> {
     const desktopRunDocuments = [];
 
     for (const desktopRun of desktopRuns) {
-      const { htmlRuns, jsonRuns, summary, url } = desktopRun;
-      desktopRunDocuments.push({
-        commitHash,
-        commitMessage,
-        commitTimestamp,
-        author,
-        project,
-        branch,
-        url,
-        summary,
-        htmlRuns,
-        jsonRuns,
-        type: 'desktop',
-      });
+      desktopRunDocuments.push(createRunDocument(desktopRun, 'desktop'));
     }
 
     const mobileRuns = await sortAndReadRuns(mobileRunManifests);
     const mobileRunDocuments = [];
 
     for (const mobileRun of mobileRuns) {
-      const { htmlRuns, jsonRuns, summary, url } = mobileRun;
-      mobileRunDocuments.push({
-        commitHash,
-        commitMessage,
-        commitTimestamp,
-        author,
-        project,
-        branch,
-        url,
-        summary,
-        htmlRuns,
-        jsonRuns,
-        type: 'mobile',
-      });
+      mobileRunDocuments.push(createRunDocument(mobileRun, 'mobile'));
     }
 
-    console.log('Uploading to MongoDB...');
     const collectionName = branch === 'main' ? MAIN_COLL_NAME : PR_COLL_NAME;
     const client = new MongoClient(process.env.ATLAS_URI || '');
     const db = client.db(DB_NAME);
 
+    console.log(`Uploading to Atlas DB ${DB_NAME} and Collection ${collectionName}...`);
     const collection = db.collection(collectionName);
     await collection.insertMany([
       ...desktopRunDocuments,
