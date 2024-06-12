@@ -43148,6 +43148,14 @@ const summaryProperties = [
     'pwa',
     'accessibility',
 ];
+const extendedSummaryProperties = [
+    'largest-contentful-paint',
+    'first-contentful-paint',
+    'total-blocking-time',
+    'speed-index',
+    'cumulative-layout-shift',
+    'interactive',
+];
 const DB_NAME = `lighthouse`;
 /* Used on PR creation and update (synchronize) */
 const PR_COLL_NAME = `pr_reports`;
@@ -43160,13 +43168,24 @@ const getEmptySummary = () => ({
     'best-practices': 0,
     pwa: 0,
     accessibility: 0,
+    'largest-contentful-paint': 0,
+    'first-contentful-paint': 0,
+    'speed-index': 0,
+    'interactive': 0,
+    'total-blocking-time': 0,
+    'cumulative-layout-shift': 0,
 });
-const getAverageSummary = (manifests) => {
+const getAverageSummary = (manifests, jsonRuns) => {
     const summary = getEmptySummary();
     for (const property of summaryProperties) {
         summary[property] =
             manifests.reduce((acc, cur) => acc + cur.summary[property], 0) /
                 manifests.length;
+    }
+    for (const property of extendedSummaryProperties) {
+        summary[property] =
+            jsonRuns.reduce((acc, cur) => acc + cur.audits[property].score, 0) /
+                jsonRuns.length;
     }
     return summary;
 };
@@ -43187,8 +43206,8 @@ const sortAndAverageRuns = async (manifests) => {
     const uniqueUrls = new Set(manifests.map(manifest => manifest.url));
     for (const url of uniqueUrls) {
         const manifestsForUrl = manifests.filter(manifest => manifest.url === url);
-        const summary = getAverageSummary(manifestsForUrl);
         const { jsonRuns, htmlRuns } = await getRuns(manifestsForUrl);
+        const summary = getAverageSummary(manifestsForUrl, jsonRuns);
         runs.push({ jsonRuns, htmlRuns, summary, url });
     }
     return runs;
@@ -43219,6 +43238,7 @@ async function main() {
     try {
         const outputsFile = (await readFileAsync('./lhci/manifest.json')).toString();
         const manifestsOfLighthouseRuns = JSON.parse(outputsFile);
+        /* Separate desktop from mobile manifests */
         const [desktopRunManifests, mobileRunManifests] = manifestsOfLighthouseRuns.reduce((acc, cur) => {
             if (cur.url.includes('?desktop'))
                 acc[0].push(cur);
@@ -43226,16 +43246,21 @@ async function main() {
                 acc[1].push(cur);
             return acc;
         }, [[], []]);
+        /* Average and summarize desktop runs */
         const desktopRuns = await sortAndAverageRuns(desktopRunManifests);
         const desktopRunDocuments = [];
+        /* Construct full document for desktop runs */
         for (const desktopRun of desktopRuns) {
             desktopRunDocuments.push(createRunDocument(desktopRun, 'desktop'));
         }
+        /* Average and summarize mobile runs */
         const mobileRuns = await sortAndAverageRuns(mobileRunManifests);
         const mobileRunDocuments = [];
+        /* Construct full document for mobile runs */
         for (const mobileRun of mobileRuns) {
             mobileRunDocuments.push(createRunDocument(mobileRun, 'mobile'));
         }
+        /* Merges to main branch are saved to a different collection than PR commits */
         const collectionName = branch === 'main' ? MAIN_COLL_NAME : PR_COLL_NAME;
         const client = new mongodb_1.MongoClient(process.env.ATLAS_URI || '');
         const db = client.db(DB_NAME);

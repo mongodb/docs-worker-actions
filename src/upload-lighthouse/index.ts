@@ -31,6 +31,23 @@ const summaryProperties: (keyof Summary)[] = [
   'accessibility',
 ];
 
+interface ExtendedSummary extends Summary {
+  'largest-contentful-paint': number;
+  'first-contentful-paint': number;
+  'total-blocking-time': number;
+  'speed-index': number;
+  'cumulative-layout-shift': number;
+  'interactive': number;
+}
+const extendedSummaryProperties: (keyof ExtendedSummary)[] = [
+  'largest-contentful-paint',
+  'first-contentful-paint',
+  'total-blocking-time',
+  'speed-index',
+  'cumulative-layout-shift',
+  'interactive',
+]
+
 /* Manifest structure outputted for each Lighthouse run */
 interface Manifest {
   url: string;
@@ -46,12 +63,18 @@ interface Manifest {
  */
 interface JsonRun {
   [k: string]: unknown;
+  audits: {
+    [k in keyof ExtendedSummary]: {
+      [k: string]: unknown;
+      score: number;
+    }
+  }
 }
 
 interface RunDocument {
   jsonRuns: JsonRun[];
   htmlRuns: string[];
-  summary: Summary;
+  summary: ExtendedSummary;
   url: string;
   type: 'desktop' | 'mobile';
   commitHash: string;
@@ -69,20 +92,31 @@ const PR_COLL_NAME = `pr_reports`;
 const MAIN_COLL_NAME = `main_reports`;
 
 /* Helpers */
-const getEmptySummary = (): Summary => ({
+const getEmptySummary = (): ExtendedSummary => ({
   seo: 0,
   performance: 0,
   'best-practices': 0,
   pwa: 0,
   accessibility: 0,
+  'largest-contentful-paint': 0,
+  'first-contentful-paint': 0,
+  'speed-index': 0,
+  'interactive': 0,
+  'total-blocking-time': 0,
+  'cumulative-layout-shift': 0,
 });
 
-const getAverageSummary = (manifests: Manifest[]): Summary => {
+const getAverageSummary = (manifests: Manifest[], jsonRuns: JsonRun[]): ExtendedSummary => {
   const summary = getEmptySummary();
   for (const property of summaryProperties) {
     summary[property] =
       manifests.reduce((acc, cur) => acc + cur.summary[property], 0) /
       manifests.length;
+  }
+  for (const property of extendedSummaryProperties) {
+    summary[property] =
+      jsonRuns.reduce((acc, cur) => acc + cur.audits[property].score, 0) /
+      jsonRuns.length;
   }
   return summary;
 };
@@ -110,7 +144,7 @@ const getRuns = async (
 interface SortedRuns {
   jsonRuns: JsonRun[];
   htmlRuns: string[];
-  summary: Summary;
+  summary: ExtendedSummary;
   url: string;
 }
 
@@ -120,15 +154,15 @@ const sortAndAverageRuns = async (
   const runs: {
     jsonRuns: JsonRun[];
     htmlRuns: string[];
-    summary: Summary;
+    summary: ExtendedSummary;
     url: string;
   }[] = [];
   const uniqueUrls = new Set(manifests.map(manifest => manifest.url));
 
   for (const url of uniqueUrls) {
     const manifestsForUrl = manifests.filter(manifest => manifest.url === url);
-    const summary = getAverageSummary(manifestsForUrl);
     const { jsonRuns, htmlRuns } = await getRuns(manifestsForUrl);
+    const summary = getAverageSummary(manifestsForUrl, jsonRuns);
     runs.push({ jsonRuns, htmlRuns, summary, url });
   }
 
@@ -171,6 +205,7 @@ async function main(): Promise<void> {
 
     const manifestsOfLighthouseRuns: Manifest[] = JSON.parse(outputsFile);
 
+    /* Separate desktop from mobile manifests */
     const [desktopRunManifests, mobileRunManifests] =
       manifestsOfLighthouseRuns.reduce(
         (acc, cur) => {
@@ -181,20 +216,25 @@ async function main(): Promise<void> {
         [[], []] as Manifest[][],
       );
 
+    /* Average and summarize desktop runs */
     const desktopRuns = await sortAndAverageRuns(desktopRunManifests);
     const desktopRunDocuments = [];
 
+    /* Construct full document for desktop runs */
     for (const desktopRun of desktopRuns) {
       desktopRunDocuments.push(createRunDocument(desktopRun, 'desktop'));
     }
 
+    /* Average and summarize mobile runs */
     const mobileRuns = await sortAndAverageRuns(mobileRunManifests);
     const mobileRunDocuments = [];
 
+    /* Construct full document for mobile runs */
     for (const mobileRun of mobileRuns) {
       mobileRunDocuments.push(createRunDocument(mobileRun, 'mobile'));
     }
 
+    /* Merges to main branch are saved to a different collection than PR commits */
     const collectionName = branch === 'main' ? MAIN_COLL_NAME : PR_COLL_NAME;
     const client = new MongoClient(process.env.ATLAS_URI || '');
     const db = client.db(DB_NAME);
