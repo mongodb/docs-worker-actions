@@ -43216,7 +43216,7 @@ const createRunDocument = ({ url, summary, htmlRuns, jsonRuns }, type) => {
     const commitHash = github.context.sha;
     const author = github.context.actor;
     const commitMessage = process.env.COMMIT_MESSAGE || '';
-    const commitTimestamp = process.env.COMMIT_TIMESTAMP || (new Date()).toISOString();
+    const commitTimestamp = process.env.COMMIT_TIMESTAMP || new Date().toISOString();
     const project = process.env.PROJECT_TO_BUILD || '';
     const branch = process.env.BRANCH_NAME || '';
     console.log('commit message ', process.env.COMMIT_MESSAGE);
