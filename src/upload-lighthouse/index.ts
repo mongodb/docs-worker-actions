@@ -15,7 +15,7 @@ import { MongoClient } from 'mongodb';
 
 const readFileAsync = promisify(fs.readFile);
 
-/* Summary of important Lighthouse scores of a run */
+/* Summary of important Lighthouse scores of a run already "summarized" by lighthouse library */
 interface Summary {
   seo: number;
   performance: number;
@@ -31,13 +31,14 @@ const summaryProperties: (keyof Summary)[] = [
   'accessibility',
 ];
 
+/* Additional scores to average for DOP purposes */
 interface ExtendedSummary extends Summary {
   'largest-contentful-paint': number;
   'first-contentful-paint': number;
   'total-blocking-time': number;
   'speed-index': number;
   'cumulative-layout-shift': number;
-  interactive: number;
+  'interactive': number;
 }
 const extendedSummaryProperties: (keyof ExtendedSummary)[] = [
   'largest-contentful-paint',
@@ -46,7 +47,7 @@ const extendedSummaryProperties: (keyof ExtendedSummary)[] = [
   'speed-index',
   'cumulative-layout-shift',
   'interactive',
-];
+]
 
 /* Manifest structure outputted for each Lighthouse run */
 interface Manifest {
@@ -67,8 +68,8 @@ interface JsonRun {
     [k in keyof ExtendedSummary]: {
       [k: string]: unknown;
       score: number;
-    };
-  };
+    }
+  }
 }
 
 interface RunDocument {
@@ -101,15 +102,12 @@ const getEmptySummary = (): ExtendedSummary => ({
   'largest-contentful-paint': 0,
   'first-contentful-paint': 0,
   'speed-index': 0,
-  interactive: 0,
+  'interactive': 0,
   'total-blocking-time': 0,
   'cumulative-layout-shift': 0,
 });
 
-const getAverageSummary = (
-  manifests: Manifest[],
-  jsonRuns: JsonRun[],
-): ExtendedSummary => {
+const getAverageSummary = (manifests: Manifest[], jsonRuns: JsonRun[]): ExtendedSummary => {
   const summary = getEmptySummary();
   for (const property of summaryProperties) {
     summary[property] =
