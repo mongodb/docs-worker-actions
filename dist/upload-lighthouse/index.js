@@ -43220,7 +43220,7 @@ const createRunDocument = ({ url, summary, htmlRuns, jsonRuns }, type) => {
     const project = process.env.PROJECT_TO_BUILD || '';
     const branch = process.env.BRANCH_NAME || '';
     console.log('commit message ', process.env.COMMIT_MESSAGE);
-    console.log('what is context ', github.context);
+    console.log('time ', process.env.COMMIT_TIMESTAMP);
     return {
         commitHash,
         commitMessage,
