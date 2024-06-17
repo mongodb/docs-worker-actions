@@ -43171,7 +43171,7 @@ const getEmptySummary = () => ({
     'largest-contentful-paint': 0,
     'first-contentful-paint': 0,
     'speed-index': 0,
-    'interactive': 0,
+    interactive: 0,
     'total-blocking-time': 0,
     'cumulative-layout-shift': 0,
 });
