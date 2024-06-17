@@ -80,7 +80,7 @@ interface RunDocument {
   type: 'desktop' | 'mobile';
   commitHash: string;
   commitMessage: string;
-  commitTimestamp: string;
+  createdAt: string;
   author: string;
   project: string;
   branch: string;
@@ -180,18 +180,14 @@ const createRunDocument = (
   const commitHash = github.context.sha;
   const author = github.context.actor;
   const commitMessage = process.env.COMMIT_MESSAGE || '';
-  const commitTimestamp =
-    process.env.COMMIT_TIMESTAMP || new Date().toISOString();
+  const createdAt = new Date().toISOString();
   const project = process.env.PROJECT_TO_BUILD || '';
   const branch = process.env.BRANCH_NAME || '';
-
-  console.log('commit message ', process.env.COMMIT_MESSAGE);
-  console.log('time ', process.env.COMMIT_TIMESTAMP);
 
   return {
     commitHash,
     commitMessage,
-    commitTimestamp,
+    createdAt,
     author,
     project,
     branch,
