@@ -30,12 +30,14 @@
     "format:write": "prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
     "lint": "npx eslint . -c ./.eslintrc.yml",
+    "lint:fix": "npm run lint -- --fix",
     "package:module": "ncc build",
     "package:comment-pr": "ncc build src/comment-pr/index.ts --license licenses.txt -o dist/comment-pr",
     "package:publish-build": "ncc build src/publish-build/index.ts --license licenses.txt -o dist/publish-build",
     "package:rebuild-parse-cache": "ncc build src/rebuild-parse-cache/index.ts --license licenses.txt -o dist/rebuild-parse-cache",
     "package:build-artifact": "ncc build src/build-artifact/index.ts --license licenses.txt -o dist/build-artifact",
-    "package": "npm run package:comment-pr && npm run package:rebuild-parse-cache && npm run package:build-artifact && npm run package:publish-build",
+    "package:upload-lighthouse": "ncc build src/upload-lighthouse/index.ts --license licenses.txt -o dist/upload-lighthouse",
+    "package": "npm run package:comment-pr && npm run package:rebuild-parse-cache && npm run package:build-artifact && npm run package:publish-build && npm run package:upload-lighthouse",
     "package:watch": "npm run package -- --watch",
     "test": "(jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
     "all": "npm run format:write && npm run lint && npm run test && npm run package"
@@ -79,7 +81,7 @@
     "@aws-sdk/client-ssm": "^3.496.0",
     "axios": "^1.6.5",
     "mime": "^4.0.1",
-    "mongodb": "^6.3.0",
+    "mongodb": "^6.6.2",
     "node-fetch": "^2.7.0"
   },
   "devDependencies": {

@@ -1,0 +1,16 @@
+name: Upload Lighthouse reports to Atlas
+description: >
+  This action should run after an lhci Github workflow. 
+  That command write files to the specified file directory. One manifest.json file, a json file per run, and an html file per run.
+  A manifest.json file which holds one array. Each element equates to a lighthouse run. Within the manifest element,
+  - the url used for the run
+  - a summary of important scores
+  - the filename of the uploaded HTML lighthouse report associated with the run
+  - the filename of the uplaoded JSON lighthouse report associated with the run
+  This action will read the manifest.json file, use this to sort the multiple Lighthouse runs of the same url/environment,
+  average the summaries together, read the html and json files of each, combine all of this into one document,
+  and finally upload this metadata on each macro-run to the appropriate Atlas collection.
+author: 'MongoDB'
+runs:
+  using: node20
+  main: ../dist/upload-lighthouse/index.js
