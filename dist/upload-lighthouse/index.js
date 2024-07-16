@@ -72229,11 +72229,12 @@ async function upload({ htmlRuns, branch, url, type, commitHash, }) {
     const client = new client_s3_1.S3Client();
     const awsBucket = 'docs-lighthouse';
     const reportType = branch === 'main' ? 'main_reports' : 'pr_reports';
-    const urlWithoutType = url.endsWith('?desktop') ? url.slice(0, -8) : url;
-    console.log('without ', urlWithoutType);
-    const urlWithDashes = urlWithoutType.split(/:\/\/|:|\/\?|\/|\?/).join('-');
-    console.log('url With ', urlWithDashes);
-    const destinationDir = `/${reportType}/${commitHash}/${urlWithDashes}/${type}`;
+    let cleanedUrl = url.slice(22); // Slice off "https://localhost:9000/""
+    if (url.endsWith('?desktop'))
+        cleanedUrl = url.slice(0, -8);
+    cleanedUrl = cleanedUrl.split(/:\/\/|:|\/\?|\/|\?/).join('-');
+    console.log('url cleaned ', cleanedUrl);
+    const destinationDir = `${reportType}/${commitHash}/${cleanedUrl}/${type}`;
     console.log('destinationDir', destinationDir);
     const uploads = htmlRuns.map(async (htmlReport, i) => {
         const key = `${destinationDir}/${i + 1}.html`;
@@ -72261,23 +72262,15 @@ const fetchOneDocument = async () => {
     return result;
 };
 async function main() {
-    const result = await fetchOneDocument();
-    if (!result) {
-        console.log('result is null');
-        return;
-    }
-    // @ts-ignore
-    const { htmlRuns, branch, url, type, commitHash } = result;
-    if (Array.isArray(htmlRuns)) {
-        console.log('yay!! array');
-    }
     try {
         const result = await fetchOneDocument();
         // @ts-ignore
         await upload(result);
+        return;
     }
     catch (e) {
         // core.error(`Error while uploading to S3: ${e}`);
+        console.error('Error while uploading to S3: ', e);
     }
 }
 main();
