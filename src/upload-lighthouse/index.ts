@@ -53,7 +53,7 @@ async function upload(
   const uploads = htmlRuns.map(async (htmlReport, i) => {
     const key = `${destinationDir}/${i + 1}.html`;
     const input = {
-      Body: createReadStream(htmlReport),
+      Body: htmlReport,
       Key: key,
       Bucket: awsBucket,
       ContentType: 'text/html',
