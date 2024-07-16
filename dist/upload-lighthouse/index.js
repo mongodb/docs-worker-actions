@@ -72222,7 +72222,6 @@ var exports = __webpack_exports__;
 // import { MongoClient } from 'mongodb';
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const client_s3_1 = __nccwpck_require__(9250);
-const fs_1 = __nccwpck_require__(7147);
 const mongodb_1 = __nccwpck_require__(8821);
 const DB_NAME = `lighthouse`;
 const COLL_NAME = `main_reports`;
@@ -72240,7 +72239,7 @@ async function upload({ htmlRuns, branch, url, type, commitHash, }) {
     const uploads = htmlRuns.map(async (htmlReport, i) => {
         const key = `${destinationDir}/${i + 1}.html`;
         const input = {
-            Body: (0, fs_1.createReadStream)(htmlReport),
+            Body: htmlReport,
             Key: key,
             Bucket: awsBucket,
             ContentType: 'text/html',
