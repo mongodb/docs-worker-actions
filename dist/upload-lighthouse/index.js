@@ -72222,8 +72222,9 @@ var exports = __webpack_exports__;
 // import { MongoClient } from 'mongodb';
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const client_s3_1 = __nccwpck_require__(9250);
+const fs_1 = __nccwpck_require__(7147);
 const mongodb_1 = __nccwpck_require__(8821);
-const URI = 'mongodb+srv://mmeigs:BGqzEPusOjYDcfhb@cluster0.ylwlz.mongodb.net/';
+const URI = process.env.ATLAS_URI || '';
 const DB_NAME = `lighthouse`;
 const COLL_NAME = `main_reports`;
 const client = new mongodb_1.MongoClient(URI);
@@ -72235,19 +72236,19 @@ async function upload({ htmlRuns, branch, url, type, commitHash, }) {
     const urlWithoutType = url.endsWith('?desktop') ? url.slice(0, -8) : url;
     const urlWithDashes = urlWithoutType.split(/\/\?|\//).join('-');
     const destinationDir = `/${reportType}/${commitHash}/${urlWithDashes}/${type}`;
-    // const uploads = htmlRuns.map(async (htmlReport, i) => {
-    //   const key = `${destinationDir}/${i + 1}.html`;
-    //   const input = {
-    //     Body: createReadStream(htmlReport),
-    //     Key: key,
-    //     Bucket: awsBucket,
-    //     ContentType: 'text/html',
-    //     CacheControl: 'no-cache',
-    //   };
-    //   const command = new PutObjectCommand(input);
-    //   return client.send(command);
-    // });
-    // return Promise.all(uploads);
+    const uploads = htmlRuns.map(async (htmlReport, i) => {
+        const key = `${destinationDir}/${i + 1}.html`;
+        const input = {
+            Body: (0, fs_1.createReadStream)(htmlReport),
+            Key: key,
+            Bucket: awsBucket,
+            ContentType: 'text/html',
+            CacheControl: 'no-cache',
+        };
+        const command = new client_s3_1.PutObjectCommand(input);
+        return client.send(command);
+    });
+    return Promise.all(uploads);
 }
 const fetchOneDocument = async () => {
     // @ts-ignore

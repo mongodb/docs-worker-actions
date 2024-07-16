@@ -47,19 +47,19 @@ async function upload(
   const urlWithDashes = urlWithoutType.split(/\/\?|\//).join('-');
   const destinationDir = `/${reportType}/${commitHash}/${urlWithDashes}/${type}`;
 
-  // const uploads = htmlRuns.map(async (htmlReport, i) => {
-  //   const key = `${destinationDir}/${i + 1}.html`;
-  //   const input = {
-  //     Body: createReadStream(htmlReport),
-  //     Key: key,
-  //     Bucket: awsBucket,
-  //     ContentType: 'text/html',
-  //     CacheControl: 'no-cache',
-  //   };
-  //   const command = new PutObjectCommand(input);
-  //   return client.send(command);
-  // });
-  // return Promise.all(uploads);
+  const uploads = htmlRuns.map(async (htmlReport, i) => {
+    const key = `${destinationDir}/${i + 1}.html`;
+    const input = {
+      Body: createReadStream(htmlReport),
+      Key: key,
+      Bucket: awsBucket,
+      ContentType: 'text/html',
+      CacheControl: 'no-cache',
+    };
+    const command = new PutObjectCommand(input);
+    return client.send(command);
+  });
+  return Promise.all(uploads);
 }
 
 const fetchOneDocument = async () => {
