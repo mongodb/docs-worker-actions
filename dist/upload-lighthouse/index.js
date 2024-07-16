@@ -72222,6 +72222,7 @@ var exports = __webpack_exports__;
 // import { MongoClient } from 'mongodb';
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const client_s3_1 = __nccwpck_require__(9250);
+const fs_1 = __nccwpck_require__(7147);
 const mongodb_1 = __nccwpck_require__(8821);
 const DB_NAME = `lighthouse`;
 const COLL_NAME = `main_reports`;
@@ -72229,19 +72230,17 @@ async function upload({ htmlRuns, branch, url, type, commitHash, }) {
     const client = new client_s3_1.S3Client();
     const awsBucket = 'docs-lighthouse';
     const reportType = branch === 'main' ? 'main_reports' : 'pr_reports';
-    let cleanedUrl = url.slice(22); // Slice off "https://localhost:9000/""
-    if (url.endsWith('?desktop'))
-        cleanedUrl = url.slice(0, -8);
+    let cleanedUrl = url.replace('https://localhost:9000/', '');
+    if (cleanedUrl.endsWith('?desktop'))
+        cleanedUrl = cleanedUrl.slice(0, -8);
     cleanedUrl = cleanedUrl.split(/:\/\/|:|\/\?|\/|\?/).join('-');
     console.log('url cleaned ', cleanedUrl);
     const destinationDir = `${reportType}/${commitHash}/${cleanedUrl}/${type}`;
     console.log('destinationDir', destinationDir);
     const uploads = htmlRuns.map(async (htmlReport, i) => {
         const key = `${destinationDir}/${i + 1}.html`;
-        console.log('key ', key);
         const input = {
-            // Body: createReadStream(htmlReport),
-            Body: 'Body!!! ',
+            Body: (0, fs_1.createReadStream)(htmlReport),
             Key: key,
             Bucket: awsBucket,
             ContentType: 'text/html',
@@ -72257,8 +72256,6 @@ const fetchOneDocument = async () => {
     const db = client.db(DB_NAME);
     // @ts-ignore
     const result = await db.collection(COLL_NAME).findOne({ commitMessage: "DOP-4784: Chatbot on 404 (#1158)" }, { htmlRuns: 1, branch: 1, url: 1, type: 1, commitHash: 1 });
-    console.log('result found ');
-    console.log('htmlRuns length ', result?.htmlRuns?.length);
     return result;
 };
 async function main() {
@@ -72271,6 +72268,7 @@ async function main() {
     catch (e) {
         // core.error(`Error while uploading to S3: ${e}`);
         console.error('Error while uploading to S3: ', e);
+        throw new Error();
     }
 }
 main();
