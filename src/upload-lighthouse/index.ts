@@ -41,7 +41,9 @@ async function upload(
   const reportType = branch === 'main' ? 'main_reports': 'pr_reports';
 
   const urlWithoutType = url.endsWith('?desktop') ? url.slice(0, -8): url;
-  const urlWithDashes = urlWithoutType.split(/\/\?|\//).join('-');
+  console.log('without ', urlWithoutType)
+  const urlWithDashes = urlWithoutType.split(/:\/\/|:|\/\?|\/|\?/).join('-');
+  console.log('url With ', urlWithDashes)
   const destinationDir = `/${reportType}/${commitHash}/${urlWithDashes}/${type}`;
 
   console.log('destinationDir', destinationDir)
