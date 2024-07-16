@@ -22,7 +22,7 @@ import {
 import { promises as fs, createReadStream } from 'fs';
 import { MongoClient } from "mongodb";
 
-const URI = 'mongodb+srv://mmeigs:BGqzEPusOjYDcfhb@cluster0.ylwlz.mongodb.net/';
+const URI = process.env.ATLAS_URI || '';
 const DB_NAME = `lighthouse`;
 const COLL_NAME = `main_reports`;
 
