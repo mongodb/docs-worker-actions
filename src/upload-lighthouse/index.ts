@@ -22,12 +22,9 @@ import {
 import { promises as fs, createReadStream } from 'fs';
 import { MongoClient } from "mongodb";
 
-const URI = process.env.ATLAS_URI || '';
 const DB_NAME = `lighthouse`;
 const COLL_NAME = `main_reports`;
 
-const client = new MongoClient(URI);
-const db = client.db(DB_NAME);
 
 async function upload(
   {
@@ -63,6 +60,8 @@ async function upload(
 }
 
 const fetchOneDocument = async () => {
+  const client = new MongoClient(process.env.ATLAS_URI || '');
+  const db = client.db(DB_NAME);
   // @ts-ignore
   const result = await db.collection(COLL_NAME).findOne({ commitMessage: "DOP-4784: Chatbot on 404 (#1158)" }, { htmlRuns: 1, branch: 1, url: 1, type: 1, commitHash: 1 });
   console.log('result found ')
@@ -84,6 +83,8 @@ async function main() {
   }
 
   try {
+    const result = await fetchOneDocument();
+
     // @ts-ignore
     await upload(result as RunDocument);
   } catch (e) {

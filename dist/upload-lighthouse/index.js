@@ -72224,11 +72224,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const client_s3_1 = __nccwpck_require__(9250);
 const fs_1 = __nccwpck_require__(7147);
 const mongodb_1 = __nccwpck_require__(8821);
-const URI = process.env.ATLAS_URI || '';
 const DB_NAME = `lighthouse`;
 const COLL_NAME = `main_reports`;
-const client = new mongodb_1.MongoClient(URI);
-const db = client.db(DB_NAME);
 async function upload({ htmlRuns, branch, url, type, commitHash, }) {
     const client = new client_s3_1.S3Client();
     const awsBucket = 'docs-lighthouse';
@@ -72251,6 +72248,8 @@ async function upload({ htmlRuns, branch, url, type, commitHash, }) {
     return Promise.all(uploads);
 }
 const fetchOneDocument = async () => {
+    const client = new mongodb_1.MongoClient(process.env.ATLAS_URI || '');
+    const db = client.db(DB_NAME);
     // @ts-ignore
     const result = await db.collection(COLL_NAME).findOne({ commitMessage: "DOP-4784: Chatbot on 404 (#1158)" }, { htmlRuns: 1, branch: 1, url: 1, type: 1, commitHash: 1 });
     console.log('result found ');
@@ -72269,6 +72268,7 @@ async function main() {
         console.log('yay!! array');
     }
     try {
+        const result = await fetchOneDocument();
         // @ts-ignore
         await upload(result);
     }
