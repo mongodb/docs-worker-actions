@@ -40,8 +40,8 @@ async function upload(
   const awsBucket = 'docs-lighthouse';
   const reportType = branch === 'main' ? 'main_reports': 'pr_reports';
 
-  let cleanedUrl = url.slice(22); // Slice off "https://localhost:9000/""
-  if (url.endsWith('?desktop')) cleanedUrl = url.slice(0, -8);
+  let cleanedUrl = url.replace('https://localhost:9000/', '');
+  if (cleanedUrl.endsWith('?desktop')) cleanedUrl = cleanedUrl.slice(0, -8);
   cleanedUrl = cleanedUrl.split(/:\/\/|:|\/\?|\/|\?/).join('-');
 
   console.log('url cleaned ', cleanedUrl)
@@ -52,10 +52,8 @@ async function upload(
 
   const uploads = htmlRuns.map(async (htmlReport, i) => {
     const key = `${destinationDir}/${i + 1}.html`;
-    console.log('key ', key)
     const input = {
-      // Body: createReadStream(htmlReport),
-      Body: 'Body!!! ',
+      Body: createReadStream(htmlReport),
       Key: key,
       Bucket: awsBucket,
       ContentType: 'text/html',
@@ -72,13 +70,10 @@ const fetchOneDocument = async () => {
   const db = client.db(DB_NAME);
   // @ts-ignore
   const result = await db.collection(COLL_NAME).findOne({ commitMessage: "DOP-4784: Chatbot on 404 (#1158)" }, { htmlRuns: 1, branch: 1, url: 1, type: 1, commitHash: 1 });
-  console.log('result found ')
-  console.log('htmlRuns length ', result?.htmlRuns?.length);
   return result;
 }
 
 async function main() {
-
   try {
     const result = await fetchOneDocument();
     // @ts-ignore
@@ -86,7 +81,8 @@ async function main() {
     return;
   } catch (e) {
     // core.error(`Error while uploading to S3: ${e}`);
-    console.error('Error while uploading to S3: ', e)
+    console.error('Error while uploading to S3: ', e);
+    throw new Error();
   }
 }
 
