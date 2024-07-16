@@ -36,7 +36,7 @@ async function upload(
     commitHash,
   }: { htmlRuns: string[]; branch: string; url: string; type: string; commitHash: string; }
 ) {
-  // const client = new S3Client();
+  const client = new S3Client();
 
   const awsBucket = 'docs-lighthouse';
   const reportType = branch === 'main' ? 'main_reports': 'pr_reports';
@@ -54,18 +54,18 @@ async function upload(
   const uploads = htmlRuns.map(async (htmlReport, i) => {
     const key = `${destinationDir}/${i + 1}.html`;
 
-    const result = await uploadLargeFile({ bucketName: awsBucket, key, html: htmlReport });
-    return result;
+    // const result = await uploadLargeFile({ bucketName: awsBucket, key, html: htmlReport });
+    // return result;
 
-    // const input = {
-    //   Body: htmlReport,
-    //   Key: key,
-    //   Bucket: awsBucket,
-    //   ContentType: 'text/html',
-    //   CacheControl: 'no-cache',
-    // };
-    // const command = new PutObjectCommand(input);
-    // return client.send(command);
+    const input = {
+      Body: Buffer.from(htmlReport),
+      Key: key,
+      Bucket: awsBucket,
+      ContentType: 'text/html',
+      CacheControl: 'no-cache',
+    };
+    const command = new PutObjectCommand(input);
+    return client.send(command);
   });
   return Promise.all(uploads);
 }
