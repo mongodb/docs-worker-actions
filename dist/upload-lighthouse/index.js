@@ -72237,6 +72237,7 @@ async function upload({ htmlRuns, branch, url, type, commitHash, }) {
     console.log('destinationDir', destinationDir);
     const uploads = htmlRuns.map(async (htmlReport, i) => {
         const key = `${destinationDir}/${i + 1}.html`;
+        console.log('key ', key);
         const input = {
             // Body: createReadStream(htmlReport),
             Body: 'Body!!! ',
