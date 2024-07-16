@@ -44,10 +44,13 @@ async function upload(
   const urlWithDashes = urlWithoutType.split(/\/\?|\//).join('-');
   const destinationDir = `/${reportType}/${commitHash}/${urlWithDashes}/${type}`;
 
+  console.log('destinationDir', destinationDir)
+
   const uploads = htmlRuns.map(async (htmlReport, i) => {
     const key = `${destinationDir}/${i + 1}.html`;
     const input = {
-      Body: createReadStream(htmlReport),
+      // Body: createReadStream(htmlReport),
+      Body: 'Body!!! ',
       Key: key,
       Bucket: awsBucket,
       ContentType: 'text/html',
