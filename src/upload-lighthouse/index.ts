@@ -21,6 +21,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { promises as fs, createReadStream } from 'fs';
 import { MongoClient } from "mongodb";
+import { uploadLargeFile } from './upload';
 
 const DB_NAME = `lighthouse`;
 const COLL_NAME = `main_reports`;
@@ -35,7 +36,7 @@ async function upload(
     commitHash,
   }: { htmlRuns: string[]; branch: string; url: string; type: string; commitHash: string; }
 ) {
-  const client = new S3Client();
+  // const client = new S3Client();
 
   const awsBucket = 'docs-lighthouse';
   const reportType = branch === 'main' ? 'main_reports': 'pr_reports';
@@ -52,15 +53,19 @@ async function upload(
 
   const uploads = htmlRuns.map(async (htmlReport, i) => {
     const key = `${destinationDir}/${i + 1}.html`;
-    const input = {
-      Body: htmlReport,
-      Key: key,
-      Bucket: awsBucket,
-      ContentType: 'text/html',
-      CacheControl: 'no-cache',
-    };
-    const command = new PutObjectCommand(input);
-    return client.send(command);
+
+    const result = await uploadLargeFile({ bucketName: awsBucket, key, html: htmlReport });
+    return result;
+
+    // const input = {
+    //   Body: htmlReport,
+    //   Key: key,
+    //   Bucket: awsBucket,
+    //   ContentType: 'text/html',
+    //   CacheControl: 'no-cache',
+    // };
+    // const command = new PutObjectCommand(input);
+    // return client.send(command);
   });
   return Promise.all(uploads);
 }
