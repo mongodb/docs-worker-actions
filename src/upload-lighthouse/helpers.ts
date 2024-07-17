@@ -1,7 +1,13 @@
 import * as github from '@actions/github';
-import { readFileAsync } from ".";
-import { extendedSummaryProperties, summaryProperties } from "./constants";
-import { ExtendedSummary, JsonRun, Manifest, RunDocument, SortedRuns } from "./types";
+import { readFileAsync } from '.';
+import { extendedSummaryProperties, summaryProperties } from './constants';
+import {
+  ExtendedSummary,
+  JsonRun,
+  Manifest,
+  RunDocument,
+  SortedRuns,
+} from './types';
 
 const getEmptySummary = (): ExtendedSummary => ({
   seo: 0,
@@ -74,7 +80,7 @@ export const sortAndAverageRuns = async (
 
   return runs;
 };
-  
+
 export const createRunDocument = (
   { url, summary }: SortedRuns,
   type: 'mobile' | 'desktop',

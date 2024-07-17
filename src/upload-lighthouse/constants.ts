@@ -1,4 +1,4 @@
-import { ExtendedSummary, Summary } from "./types";
+import { ExtendedSummary, Summary } from './types';
 
 export const DB_NAME = `lighthouse`;
 /* Used on PR creation and update (synchronize) */

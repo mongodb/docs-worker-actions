@@ -14,7 +14,7 @@ import { MongoClient } from 'mongodb';
 
 import { Manifest } from './types';
 import { DB_NAME, MAIN_COLL_NAME, PR_COLL_NAME } from './constants';
-import { uploadHtmlToS3 } from './uploadToS3';
+import { uploadHtmlToS3 } from './upload-to-s3';
 import { createRunDocument, sortAndAverageRuns } from './helpers';
 
 export const readFileAsync = promisify(fs.readFile);
@@ -81,6 +81,6 @@ async function main(): Promise<void> {
     console.log('Error occurred when reading file', error);
     throw error;
   }
-};
+}
 
 main();
