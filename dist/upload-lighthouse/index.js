@@ -32370,7 +32370,7 @@ var createWaiter = /* @__PURE__ */ __name(async (options, input, acceptorChecks)
 
 var register = __nccwpck_require__(4670);
 var addHook = __nccwpck_require__(5549);
-var removeHook = __nccwpck_require__(6819);
+var removeHook = __nccwpck_require__(4726);
 
 // bind with array of arguments: https://stackoverflow.com/a/21792913
 var bind = Function.bind;
@@ -32520,7 +32520,7 @@ function register(state, name, method, options) {
 
 /***/ }),
 
-/***/ 6819:
+/***/ 4726:
 /***/ ((module) => {
 
 module.exports = removeHook;
@@ -53337,7 +53337,7 @@ const responses_1 = __nccwpck_require__(710);
 const error_1 = __nccwpck_require__(9386);
 const mongo_types_1 = __nccwpck_require__(696);
 const execute_operation_1 = __nccwpck_require__(2548);
-const get_more_1 = __nccwpck_require__(2472);
+const get_more_1 = __nccwpck_require__(6819);
 const kill_cursors_1 = __nccwpck_require__(7964);
 const read_concern_1 = __nccwpck_require__(7289);
 const read_preference_1 = __nccwpck_require__(9802);
@@ -54852,7 +54852,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RunCommandCursor = void 0;
 const error_1 = __nccwpck_require__(9386);
 const execute_operation_1 = __nccwpck_require__(2548);
-const get_more_1 = __nccwpck_require__(2472);
+const get_more_1 = __nccwpck_require__(6819);
 const run_command_1 = __nccwpck_require__(1363);
 const utils_1 = __nccwpck_require__(1371);
 const abstract_cursor_1 = __nccwpck_require__(7349);
@@ -60067,7 +60067,7 @@ exports.FindOneAndUpdateOperation = FindOneAndUpdateOperation;
 
 /***/ }),
 
-/***/ 2472:
+/***/ 6819:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -75377,7 +75377,38 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 738:
+/***/ 8852:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.extendedSummaryProperties = exports.summaryProperties = exports.MAIN_COLL_NAME = exports.PR_COLL_NAME = exports.DB_NAME = void 0;
+exports.DB_NAME = `lighthouse`;
+/* Used on PR creation and update (synchronize) */
+exports.PR_COLL_NAME = `pr_reports`;
+/* Used on merge to main in Snooty to keep running scores of production */
+exports.MAIN_COLL_NAME = `main_reports`;
+exports.summaryProperties = [
+    'seo',
+    'performance',
+    'best-practices',
+    'pwa',
+    'accessibility',
+];
+exports.extendedSummaryProperties = [
+    'largest-contentful-paint',
+    'first-contentful-paint',
+    'total-blocking-time',
+    'speed-index',
+    'cumulative-layout-shift',
+    'interactive',
+];
+
+
+/***/ }),
+
+/***/ 5929:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -75405,47 +75436,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-/**
- * This action will need to be run after using a lhci command in a Github workflow.
- * That command write files to the specified file directory.
- * The structure and documentation of the outputted files can be found here:
- * https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md#outputdir
- 
- * This action will read the manifest.json file, use this to sort the multiple Lighthouse runs of the same url/environment,
- * average the summaries together, read the html and json files of each, combine all of this into one document,
- * and finally upload this metadata on each macro-run to the appropriate Atlas collection.
- */
-const fs_1 = __importDefault(__nccwpck_require__(7147));
+exports.createRunDocument = exports.sortAndAverageRuns = void 0;
 const github = __importStar(__nccwpck_require__(5438));
-const util_1 = __nccwpck_require__(3837);
-const mongodb_1 = __nccwpck_require__(8821);
-const client_s3_1 = __nccwpck_require__(9250);
-const readFileAsync = (0, util_1.promisify)(fs_1.default.readFile);
-const summaryProperties = [
-    'seo',
-    'performance',
-    'best-practices',
-    'pwa',
-    'accessibility',
-];
-const extendedSummaryProperties = [
-    'largest-contentful-paint',
-    'first-contentful-paint',
-    'total-blocking-time',
-    'speed-index',
-    'cumulative-layout-shift',
-    'interactive',
-];
-const DB_NAME = `lighthouse`;
-/* Used on PR creation and update (synchronize) */
-const PR_COLL_NAME = `pr_reports`;
-/* Used on merge to main in Snooty to keep running scores of production */
-const MAIN_COLL_NAME = `main_reports`;
-/* Helpers */
+const _1 = __nccwpck_require__(738);
+const constants_1 = __nccwpck_require__(8852);
 const getEmptySummary = () => ({
     seo: 0,
     performance: 0,
@@ -75461,12 +75456,12 @@ const getEmptySummary = () => ({
 });
 const getAverageSummary = (manifests, jsonRuns) => {
     const summary = getEmptySummary();
-    for (const property of summaryProperties) {
+    for (const property of constants_1.summaryProperties) {
         summary[property] =
             manifests.reduce((acc, cur) => acc + cur.summary[property], 0) /
                 manifests.length;
     }
-    for (const property of extendedSummaryProperties) {
+    for (const property of constants_1.extendedSummaryProperties) {
         summary[property] =
             jsonRuns.reduce((acc, cur) => acc + cur.audits[property].score, 0) /
                 jsonRuns.length;
@@ -75478,8 +75473,8 @@ const getRuns = async (manifests) => {
     const jsonRuns = [];
     const htmlRuns = [];
     for (const manifest of manifests) {
-        jsonRuns.push(JSON.parse((await readFileAsync(manifest.jsonPath)).toString()));
-        htmlRuns.push((await readFileAsync(manifest.htmlPath)).toString());
+        jsonRuns.push(JSON.parse((await (0, _1.readFileAsync)(manifest.jsonPath)).toString()));
+        htmlRuns.push((await (0, _1.readFileAsync)(manifest.htmlPath)).toString());
     }
     await Promise.all(jsonRuns);
     await Promise.all(htmlRuns);
@@ -75496,6 +75491,7 @@ const sortAndAverageRuns = async (manifests) => {
     }
     return runs;
 };
+exports.sortAndAverageRuns = sortAndAverageRuns;
 const createRunDocument = ({ url, summary }, type) => {
     const commitHash = github.context.sha;
     const author = github.context.actor;
@@ -75517,7 +75513,125 @@ const createRunDocument = ({ url, summary }, type) => {
         type,
     };
 };
-// Html reports will be uploaded to S3. The 
+exports.createRunDocument = createRunDocument;
+
+
+/***/ }),
+
+/***/ 738:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.readFileAsync = void 0;
+/**
+ * This action will need to be run after using a lhci command in a Github workflow.
+ * That command write files to the specified file directory.
+ * The structure and documentation of the outputted files can be found here:
+ * https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md#outputdir
+ 
+ * This action will read the manifest.json file, use this to sort the multiple Lighthouse runs of the same url/environment,
+ * average the summaries together, read the html and json files of each, combine all of this into one document,
+ * and finally upload this metadata on each macro-run to the appropriate Atlas collection.
+ */
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const util_1 = __nccwpck_require__(3837);
+const mongodb_1 = __nccwpck_require__(8821);
+const constants_1 = __nccwpck_require__(8852);
+const uploadToS3_1 = __nccwpck_require__(9187);
+const helpers_1 = __nccwpck_require__(5929);
+exports.readFileAsync = (0, util_1.promisify)(fs_1.default.readFile);
+async function main() {
+    const branch = process.env.BRANCH_NAME || '';
+    try {
+        const outputsFile = (await (0, exports.readFileAsync)('./lhci/manifest.json')).toString();
+        const manifestsOfLighthouseRuns = JSON.parse(outputsFile);
+        /* Separate desktop from mobile manifests */
+        const [desktopRunManifests, mobileRunManifests] = manifestsOfLighthouseRuns.reduce((acc, cur) => {
+            if (cur.url.includes('?desktop'))
+                acc[0].push(cur);
+            else
+                acc[1].push(cur);
+            return acc;
+        }, [[], []]);
+        /* Average and summarize desktop runs */
+        const desktopRuns = await (0, helpers_1.sortAndAverageRuns)(desktopRunManifests);
+        const desktopRunDocuments = [];
+        /* Construct full document for desktop runs */
+        for (const desktopRun of desktopRuns) {
+            desktopRunDocuments.push((0, helpers_1.createRunDocument)(desktopRun, 'desktop'));
+            await (0, uploadToS3_1.uploadHtmlToS3)(desktopRun, 'desktop');
+        }
+        /* Average and summarize mobile runs */
+        const mobileRuns = await (0, helpers_1.sortAndAverageRuns)(mobileRunManifests);
+        const mobileRunDocuments = [];
+        /* Construct full document for mobile runs */
+        for (const mobileRun of mobileRuns) {
+            mobileRunDocuments.push((0, helpers_1.createRunDocument)(mobileRun, 'mobile'));
+            await (0, uploadToS3_1.uploadHtmlToS3)(mobileRun, 'mobile');
+        }
+        /* Merges to main branch are saved to a different collection than PR commits */
+        const collectionName = branch === 'main' ? constants_1.MAIN_COLL_NAME : constants_1.PR_COLL_NAME;
+        const client = new mongodb_1.MongoClient(process.env.ATLAS_URI || '');
+        const db = client.db(constants_1.DB_NAME);
+        console.log(`Uploading to Atlas DB ${constants_1.DB_NAME} and Collection ${collectionName}...`);
+        const collection = db.collection(collectionName);
+        await collection.insertMany([
+            ...desktopRunDocuments,
+            ...mobileRunDocuments,
+        ]);
+        console.log('Closing database connection');
+        await client.close();
+        return;
+    }
+    catch (error) {
+        console.log('Error occurred when reading file', error);
+        throw error;
+    }
+}
+;
+main();
+
+
+/***/ }),
+
+/***/ 9187:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.uploadHtmlToS3 = void 0;
+const github = __importStar(__nccwpck_require__(5438));
+const client_s3_1 = __nccwpck_require__(9250);
+// Html reports will be uploaded to S3
 async function uploadHtmlToS3({ htmlRuns, url, }, type) {
     const AWS_BUCKET = 'docs-lighthouse';
     const commitHash = github.context.sha;
@@ -75545,57 +75659,8 @@ async function uploadHtmlToS3({ htmlRuns, url, }, type) {
     });
     return Promise.all(uploads);
 }
+exports.uploadHtmlToS3 = uploadHtmlToS3;
 ;
-async function main() {
-    const branch = process.env.BRANCH_NAME || '';
-    try {
-        const outputsFile = (await readFileAsync('./lhci/manifest.json')).toString();
-        const manifestsOfLighthouseRuns = JSON.parse(outputsFile);
-        /* Separate desktop from mobile manifests */
-        const [desktopRunManifests, mobileRunManifests] = manifestsOfLighthouseRuns.reduce((acc, cur) => {
-            if (cur.url.includes('?desktop'))
-                acc[0].push(cur);
-            else
-                acc[1].push(cur);
-            return acc;
-        }, [[], []]);
-        /* Average and summarize desktop runs */
-        const desktopRuns = await sortAndAverageRuns(desktopRunManifests);
-        const desktopRunDocuments = [];
-        /* Construct full document for desktop runs */
-        for (const desktopRun of desktopRuns) {
-            desktopRunDocuments.push(createRunDocument(desktopRun, 'desktop'));
-            await uploadHtmlToS3(desktopRun, 'desktop');
-        }
-        /* Average and summarize mobile runs */
-        const mobileRuns = await sortAndAverageRuns(mobileRunManifests);
-        const mobileRunDocuments = [];
-        /* Construct full document for mobile runs */
-        for (const mobileRun of mobileRuns) {
-            mobileRunDocuments.push(createRunDocument(mobileRun, 'mobile'));
-            await uploadHtmlToS3(mobileRun, 'mobile');
-        }
-        /* Merges to main branch are saved to a different collection than PR commits */
-        const collectionName = branch === 'main' ? MAIN_COLL_NAME : PR_COLL_NAME;
-        const client = new mongodb_1.MongoClient(process.env.ATLAS_URI || '');
-        const db = client.db(DB_NAME);
-        console.log(`Uploading to Atlas DB ${DB_NAME} and Collection ${collectionName}...`);
-        const collection = db.collection(collectionName);
-        await collection.insertMany([
-            ...desktopRunDocuments,
-            ...mobileRunDocuments,
-        ]);
-        console.log('Closing database connection');
-        await client.close();
-        return;
-    }
-    catch (error) {
-        console.log('Error occurred when reading file', error);
-        throw error;
-    }
-}
-;
-main();
 
 
 /***/ }),
