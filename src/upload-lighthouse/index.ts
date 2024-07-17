@@ -15,6 +15,7 @@ import { MongoClient } from 'mongodb';
 import {
   S3Client,
   PutObjectCommand,
+  ObjectCannedACL,
 } from '@aws-sdk/client-s3';
 
 const readFileAsync = promisify(fs.readFile);
@@ -77,7 +78,6 @@ interface JsonRun {
 }
 
 interface RunDocument {
-  htmlRuns: string[];
   summary: ExtendedSummary;
   url: string;
   type: 'desktop' | 'mobile';
@@ -175,7 +175,7 @@ const sortAndAverageRuns = async (
 };
 
 const createRunDocument = (
-  { url, summary, htmlRuns }: SortedRuns,
+  { url, summary }: SortedRuns,
   type: 'mobile' | 'desktop',
 ): RunDocument => {
   const commitHash = github.context.sha;
@@ -196,11 +196,11 @@ const createRunDocument = (
     branch,
     url,
     summary,
-    htmlRuns,
     type,
   };
 };
 
+// Html reports will be uploaded to S3. The 
 async function uploadHtmlToS3(
   { htmlRuns, url, }: SortedRuns,
   type: 'mobile' | 'desktop'
@@ -212,18 +212,15 @@ async function uploadHtmlToS3(
 
   const reportType = branch === 'main' ? 'main_reports': 'pr_reports';
 
-  let cleanedUrl = url.replace('https://localhost:9000/', '');
+  let cleanedUrl = url.replace('http://localhost:9000/', '');
   if (cleanedUrl.endsWith('?desktop')) cleanedUrl = cleanedUrl.slice(0, -8);
-  cleanedUrl = cleanedUrl.split(/:\/\/|:|\/\?|\/|\?/).join('-');
-
-  console.log('url cleaned ', cleanedUrl)
+  cleanedUrl = cleanedUrl.split(/\/\/|\//).join('-');
 
   const destinationDir = `${reportType}/${commitHash}/${cleanedUrl}/${type}`;
 
-  console.log('destinationDir', destinationDir)
-
   const uploads = htmlRuns.map(async (htmlReport, i) => {
     const key = `${destinationDir}/${i + 1}.html`;
+    console.log('Uploading to S3 at ', key);
 
     const input = {
       Body: Buffer.from(htmlReport),
@@ -231,6 +228,7 @@ async function uploadHtmlToS3(
       Bucket: AWS_BUCKET,
       ContentType: 'text/html',
       CacheControl: 'no-cache',
+      ACL: ObjectCannedACL.public_read,
     };
     const command = new PutObjectCommand(input);
     return client.send(command);
