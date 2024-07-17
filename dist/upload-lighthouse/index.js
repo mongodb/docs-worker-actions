@@ -75496,7 +75496,7 @@ const sortAndAverageRuns = async (manifests) => {
     }
     return runs;
 };
-const createRunDocument = ({ url, summary, htmlRuns }, type) => {
+const createRunDocument = ({ url, summary }, type) => {
     const commitHash = github.context.sha;
     const author = github.context.actor;
     const commitMessage = process.env.COMMIT_MESSAGE || '';
@@ -75514,31 +75514,31 @@ const createRunDocument = ({ url, summary, htmlRuns }, type) => {
         branch,
         url,
         summary,
-        htmlRuns,
         type,
     };
 };
+// Html reports will be uploaded to S3. The 
 async function uploadHtmlToS3({ htmlRuns, url, }, type) {
     const AWS_BUCKET = 'docs-lighthouse';
     const commitHash = github.context.sha;
     const branch = process.env.BRANCH_NAME || '';
     const client = new client_s3_1.S3Client();
     const reportType = branch === 'main' ? 'main_reports' : 'pr_reports';
-    let cleanedUrl = url.replace('https://localhost:9000/', '');
+    let cleanedUrl = url.replace('http://localhost:9000/', '');
     if (cleanedUrl.endsWith('?desktop'))
         cleanedUrl = cleanedUrl.slice(0, -8);
-    cleanedUrl = cleanedUrl.split(/:\/\/|:|\/\?|\/|\?/).join('-');
-    console.log('url cleaned ', cleanedUrl);
+    cleanedUrl = cleanedUrl.split(/\/\/|\//).join('-');
     const destinationDir = `${reportType}/${commitHash}/${cleanedUrl}/${type}`;
-    console.log('destinationDir', destinationDir);
     const uploads = htmlRuns.map(async (htmlReport, i) => {
         const key = `${destinationDir}/${i + 1}.html`;
+        console.log('Uploading to S3 at ', key);
         const input = {
             Body: Buffer.from(htmlReport),
             Key: key,
             Bucket: AWS_BUCKET,
             ContentType: 'text/html',
             CacheControl: 'no-cache',
+            ACL: client_s3_1.ObjectCannedACL.public_read,
         };
         const command = new client_s3_1.PutObjectCommand(input);
         return client.send(command);
