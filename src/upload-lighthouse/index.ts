@@ -5,8 +5,8 @@
  * https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md#outputdir
  
  * This action will read the manifest.json file, use this to sort the multiple Lighthouse runs of the same url/environment,
- * average the summaries together, read the html and json files of each, combine all of this into one document,
- * and finally upload this metadata on each macro-run to the appropriate Atlas collection.
+ * average the summaries together and finally upload this metadata on each macro-run to the appropriate Atlas collection.
+ * It also reads the full html reports of each and uploads these larger files to S3.
  */
 import fs from 'fs';
 import { promisify } from 'util';

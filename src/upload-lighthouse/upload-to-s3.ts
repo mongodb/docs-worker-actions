@@ -13,17 +13,9 @@ export async function uploadHtmlToS3(
   type: 'mobile' | 'desktop',
 ): Promise<PutObjectCommandOutput[]> {
   const AWS_BUCKET = 'docs-lighthouse';
-  const commitHash = github.context.sha;
-  const branch = process.env.BRANCH_NAME || '';
   const client = new S3Client();
 
-  const reportType = branch === 'main' ? 'main_reports' : 'pr_reports';
-
-  let cleanedUrl = url.replace('http://localhost:9000/', '');
-  if (cleanedUrl.endsWith('?desktop')) cleanedUrl = cleanedUrl.slice(0, -8);
-  cleanedUrl = cleanedUrl.split(/\/\/|\//).join('-');
-
-  const destinationDir = `${reportType}/${commitHash}/${cleanedUrl}/${type}`;
+  const destinationDir = derivePathFromReport(url, type);
 
   const uploads = htmlRuns.map(async (htmlReport, i) => {
     const key = `${destinationDir}/${i + 1}.html`;
@@ -41,4 +33,16 @@ export async function uploadHtmlToS3(
     return client.send(command);
   });
   return Promise.all(uploads);
+}
+
+function derivePathFromReport(url: string, type: 'mobile' | 'desktop'): string {
+  const commitHash = github.context.sha;
+  const branch = process.env.BRANCH_NAME || '';
+
+  const reportType = branch === 'main' ? 'main_reports' : 'pr_reports';
+
+  let cleanedUrl = url.replace('http://localhost:9000/', '');
+  cleanedUrl = cleanedUrl.replace('?desktop', '');
+
+  return `${reportType}/${commitHash}/${cleanedUrl}/${type}`;
 }

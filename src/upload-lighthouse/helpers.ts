@@ -45,38 +45,42 @@ const getAverageSummary = (
 const getRuns = async (
   manifests: Manifest[],
 ): Promise<{ jsonRuns: JsonRun[]; htmlRuns: string[] }> => {
-  const jsonRuns = [];
-  const htmlRuns = [];
-
-  for (const manifest of manifests) {
-    jsonRuns.push(
+  const jsonRuns = await Promise.all(
+    manifests.map(async manifest =>
       JSON.parse((await readFileAsync(manifest.jsonPath)).toString()),
-    );
+    ),
+  );
 
-    htmlRuns.push((await readFileAsync(manifest.htmlPath)).toString());
-  }
+  const htmlRuns = await Promise.all(
+    manifests.map(async manifest =>
+      (await readFileAsync(manifest.htmlPath)).toString(),
+    ),
+  );
 
-  await Promise.all(jsonRuns);
-  await Promise.all(htmlRuns);
   return { jsonRuns, htmlRuns };
 };
 
 export const sortAndAverageRuns = async (
   manifests: Manifest[],
 ): Promise<SortedRuns[]> => {
+  const uniqueUrls = Array.from(
+    new Set(manifests.map(manifest => manifest.url)),
+  );
+
   const runs: {
     htmlRuns: string[];
     summary: ExtendedSummary;
     url: string;
-  }[] = [];
-  const uniqueUrls = new Set(manifests.map(manifest => manifest.url));
-
-  for (const url of uniqueUrls) {
-    const manifestsForUrl = manifests.filter(manifest => manifest.url === url);
-    const { jsonRuns, htmlRuns } = await getRuns(manifestsForUrl);
-    const summary = getAverageSummary(manifestsForUrl, jsonRuns);
-    runs.push({ htmlRuns, summary, url });
-  }
+  }[] = await Promise.all(
+    uniqueUrls.map(async url => {
+      const manifestsForUrl = manifests.filter(
+        manifest => manifest.url === url,
+      );
+      const { jsonRuns, htmlRuns } = await getRuns(manifestsForUrl);
+      const summary = getAverageSummary(manifestsForUrl, jsonRuns);
+      return { htmlRuns, summary, url };
+    }),
+  );
 
   return runs;
 };
