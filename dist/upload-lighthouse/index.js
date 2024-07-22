@@ -75470,25 +75470,18 @@ const getAverageSummary = (manifests, jsonRuns) => {
 };
 /* Reads and returns files of runs in arrays */
 const getRuns = async (manifests) => {
-    const jsonRuns = [];
-    const htmlRuns = [];
-    for (const manifest of manifests) {
-        jsonRuns.push(JSON.parse((await (0, _1.readFileAsync)(manifest.jsonPath)).toString()));
-        htmlRuns.push((await (0, _1.readFileAsync)(manifest.htmlPath)).toString());
-    }
-    await Promise.all(jsonRuns);
-    await Promise.all(htmlRuns);
+    const jsonRuns = await Promise.all(manifests.map(async (manifest) => JSON.parse((await (0, _1.readFileAsync)(manifest.jsonPath)).toString())));
+    const htmlRuns = await Promise.all(manifests.map(async (manifest) => (await (0, _1.readFileAsync)(manifest.htmlPath)).toString()));
     return { jsonRuns, htmlRuns };
 };
 const sortAndAverageRuns = async (manifests) => {
-    const runs = [];
-    const uniqueUrls = new Set(manifests.map(manifest => manifest.url));
-    for (const url of uniqueUrls) {
+    const uniqueUrls = Array.from(new Set(manifests.map(manifest => manifest.url)));
+    const runs = await Promise.all(uniqueUrls.map(async (url) => {
         const manifestsForUrl = manifests.filter(manifest => manifest.url === url);
         const { jsonRuns, htmlRuns } = await getRuns(manifestsForUrl);
         const summary = getAverageSummary(manifestsForUrl, jsonRuns);
-        runs.push({ htmlRuns, summary, url });
-    }
+        return { htmlRuns, summary, url };
+    }));
     return runs;
 };
 exports.sortAndAverageRuns = sortAndAverageRuns;
@@ -75535,14 +75528,14 @@ exports.readFileAsync = void 0;
  * https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md#outputdir
  
  * This action will read the manifest.json file, use this to sort the multiple Lighthouse runs of the same url/environment,
- * average the summaries together, read the html and json files of each, combine all of this into one document,
- * and finally upload this metadata on each macro-run to the appropriate Atlas collection.
+ * average the summaries together and finally upload this metadata on each macro-run to the appropriate Atlas collection.
+ * It also reads the full html reports of each and uploads these larger files to S3.
  */
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const util_1 = __nccwpck_require__(3837);
 const mongodb_1 = __nccwpck_require__(8821);
 const constants_1 = __nccwpck_require__(8852);
-const uploadToS3_1 = __nccwpck_require__(9187);
+const upload_to_s3_1 = __nccwpck_require__(8416);
 const helpers_1 = __nccwpck_require__(5929);
 exports.readFileAsync = (0, util_1.promisify)(fs_1.default.readFile);
 async function main() {
@@ -75564,7 +75557,7 @@ async function main() {
         /* Construct full document for desktop runs */
         for (const desktopRun of desktopRuns) {
             desktopRunDocuments.push((0, helpers_1.createRunDocument)(desktopRun, 'desktop'));
-            await (0, uploadToS3_1.uploadHtmlToS3)(desktopRun, 'desktop');
+            await (0, upload_to_s3_1.uploadHtmlToS3)(desktopRun, 'desktop');
         }
         /* Average and summarize mobile runs */
         const mobileRuns = await (0, helpers_1.sortAndAverageRuns)(mobileRunManifests);
@@ -75572,7 +75565,7 @@ async function main() {
         /* Construct full document for mobile runs */
         for (const mobileRun of mobileRuns) {
             mobileRunDocuments.push((0, helpers_1.createRunDocument)(mobileRun, 'mobile'));
-            await (0, uploadToS3_1.uploadHtmlToS3)(mobileRun, 'mobile');
+            await (0, upload_to_s3_1.uploadHtmlToS3)(mobileRun, 'mobile');
         }
         /* Merges to main branch are saved to a different collection than PR commits */
         const collectionName = branch === 'main' ? constants_1.MAIN_COLL_NAME : constants_1.PR_COLL_NAME;
@@ -75593,13 +75586,12 @@ async function main() {
         throw error;
     }
 }
-;
 main();
 
 
 /***/ }),
 
-/***/ 9187:
+/***/ 8416:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -75632,17 +75624,10 @@ exports.uploadHtmlToS3 = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const client_s3_1 = __nccwpck_require__(9250);
 // Html reports will be uploaded to S3
-async function uploadHtmlToS3({ htmlRuns, url, }, type) {
+async function uploadHtmlToS3({ htmlRuns, url }, type) {
     const AWS_BUCKET = 'docs-lighthouse';
-    const commitHash = github.context.sha;
-    const branch = process.env.BRANCH_NAME || '';
     const client = new client_s3_1.S3Client();
-    const reportType = branch === 'main' ? 'main_reports' : 'pr_reports';
-    let cleanedUrl = url.replace('http://localhost:9000/', '');
-    if (cleanedUrl.endsWith('?desktop'))
-        cleanedUrl = cleanedUrl.slice(0, -8);
-    cleanedUrl = cleanedUrl.split(/\/\/|\//).join('-');
-    const destinationDir = `${reportType}/${commitHash}/${cleanedUrl}/${type}`;
+    const destinationDir = derivePathFromReport(url, type);
     const uploads = htmlRuns.map(async (htmlReport, i) => {
         const key = `${destinationDir}/${i + 1}.html`;
         console.log('Uploading to S3 at ', key);
@@ -75660,7 +75645,14 @@ async function uploadHtmlToS3({ htmlRuns, url, }, type) {
     return Promise.all(uploads);
 }
 exports.uploadHtmlToS3 = uploadHtmlToS3;
-;
+function derivePathFromReport(url, type) {
+    const commitHash = github.context.sha;
+    const branch = process.env.BRANCH_NAME || '';
+    const reportType = branch === 'main' ? 'main_reports' : 'pr_reports';
+    let cleanedUrl = url.replace('http://localhost:9000/', '');
+    cleanedUrl = cleanedUrl.replace('?desktop', '');
+    return `${reportType}/${commitHash}/${cleanedUrl}/${type}`;
+}
 
 
 /***/ }),
