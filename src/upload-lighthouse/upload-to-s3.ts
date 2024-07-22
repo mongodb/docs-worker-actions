@@ -43,6 +43,7 @@ function derivePathFromReport(url: string, type: 'mobile' | 'desktop'): string {
 
   let cleanedUrl = url.replace('http://localhost:9000/', '');
   cleanedUrl = cleanedUrl.replace('?desktop', '');
+  if (cleanedUrl.endsWith('/')) cleanedUrl = cleanedUrl.slice(0, -1);
 
   return `${reportType}/${commitHash}/${cleanedUrl}/${type}`;
 }

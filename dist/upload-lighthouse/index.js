@@ -75651,6 +75651,8 @@ function derivePathFromReport(url, type) {
     const reportType = branch === 'main' ? 'main_reports' : 'pr_reports';
     let cleanedUrl = url.replace('http://localhost:9000/', '');
     cleanedUrl = cleanedUrl.replace('?desktop', '');
+    if (cleanedUrl.endsWith('/'))
+        cleanedUrl = cleanedUrl.slice(0, -1);
     return `${reportType}/${commitHash}/${cleanedUrl}/${type}`;
 }
 
