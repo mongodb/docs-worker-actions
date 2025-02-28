@@ -1,0 +1,62 @@
+name: 'Coverage Check Action'
+description: 'Runs the coverage check and outputs results'
+inputs:
+  repo-path:
+    description: 'Path to the cloned repository'
+    required: true
+  required-coverage:
+    description: 'Coverage threshold percentage'
+    required: false
+    default: '90'
+outputs:
+  site_coverage_list:
+    description: 'List of sites with low coverage'
+  coverage_below_threshold:
+    description: 'Boolean flag indicating if coverage is below threshold'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Coverage Check
+      shell: bash
+      run: |
+        cd ${{ inputs.repo-path }}
+        npm ci
+        COVERAGE_OUTPUT=$(npm run dev -- -c "$GITHUB_WORKSPACE" -v --sp 95)
+
+        REQUIRED_COVERAGE=${{ inputs.required-coverage }}
+        
+        # Extract all Average Coverage values below the threshold
+        SITE_COVERAGE_LIST=$(echo "$COVERAGE_OUTPUT" | awk -v threshold=$REQUIRED_COVERAGE '
+          /Average Coverage:/ {
+              coverage = $3 + 0;
+              if (coverage < threshold) {
+                  low_coverage_detected = 1;
+                  last_coverage = coverage;
+              } else {
+                  low_coverage_detected = 0;
+              }
+          }
+          /Finished processing site "/ {
+              if (low_coverage_detected) {
+                  site = $4;
+                  gsub(/"/, "", site);  # Extract site name
+                  print site ":" last_coverage;  # Store as site:coverage
+              }
+          }
+        ' | paste -sd ',' - )
+
+        # Print detected values
+        echo "Detected Coverage Below Threshold: $SITE_COVERAGE_LIST"
+
+        echo "Required Coverage: $REQUIRED_COVERAGE"
+
+        # Check if SITE_COVERAGE_LIST is empty or not
+        if [ -n "$SITE_COVERAGE_LIST" ]; then
+            echo "Test coverage is below the required threshold ($REQUIRED_COVERAGE%)."
+            echo "coverage_below_threshold=true" >> $GITHUB_ENV
+            echo "SITE_COVERAGE_LIST=$SITE_COVERAGE_LIST" >> $GITHUB_ENV
+        else
+            echo "Test coverage meets the required threshold."
+            echo "coverage_below_threshold=false" >> $GITHUB_ENV
+        fi
