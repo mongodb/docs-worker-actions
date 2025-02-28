@@ -1,0 +1,55 @@
+name: 'Coverage Report Slack Action'
+description: 'Runs the sending Osiris coverage report to Slack'
+inputs:
+  required-coverage:
+    description: 'Coverage threshold percentage'
+    required: false
+    default: '90'
+  site-coverage-list:
+    description: 'List of the sites with low coverage'
+    required: true
+  slack-webhook-url:
+    description: 'The webhook for the osiris-coverage channel'
+    required: true
+  repository:
+    description: 'The repository that is tied to the pull request'
+    required: true
+  pr-title:
+    description: 'The title of the pull request'
+    required: true
+  pr-number:
+    description: 'The pull request number'
+    required: true
+  pr-url:
+    description: 'The URL of the pull request'
+    required: true
+  pr-sha:
+    description: 'The commit hash of the pull request'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Send Slack Notification
+      shell: bash
+      run: |
+        TEXT_MESSAGE="⚠️ *Test Coverage Alert* ⚠️\n\nThe test coverage is below the required threshold of ${{ inputs.required-coverage }}%.\n\n*Sites with Low Coverage:* \n"
+
+        IFS=',' read -r -a SITE_COVERAGE_ARRAY <<< "${{ inputs.site-coverage-list }}"
+
+        for item in "${SITE_COVERAGE_ARRAY[@]}"; do
+            site_name="${item%%:*}"
+            coverage_value="${item##*:}"
+            TEXT_MESSAGE+="• ${site_name}: ${coverage_value}%\n"
+        done
+
+        TEXT_MESSAGE+="\n*Repository:* <https://github.com/${{ inputs.repository }}|${{ inputs.repository }}>\n"
+        TEXT_MESSAGE+="*PR Title:* ${{ inputs.pr-title }}\n"
+        TEXT_MESSAGE+="*PR Number:* #${{ inputs.pr-number }}\n"
+        TEXT_MESSAGE+="*PR URL:* <${{ inputs.pr-url }}|View PR>\n"
+        TEXT_MESSAGE+="*Commit SHA:* \`${{ inputs.pr-sha }}\`\n\n"
+        TEXT_MESSAGE+="Please review the test coverage and take action if necessary."
+
+        curl -v -X POST -H 'Content-type: application/json' \
+          --data '{"text": "'"$TEXT_MESSAGE"'"}' \
+          ${{ inputs.slack-webhook-url }}
